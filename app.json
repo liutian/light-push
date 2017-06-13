@@ -1,0 +1,53 @@
+{
+  "apps": [
+    {
+      "name": "socket-1",
+      "script": "./src/socket/index.js",
+      "args": "-p=21315",
+      "node_args": "",
+      "max_memory_restart": "2G"
+    },
+    {
+      "name": "socket-2",
+      "script": "./src/socket/index.js",
+      "args": "-p=21316",
+      "node_args": "",
+      "max_memory_restart": "2G"
+    },
+    {
+      "name": "socket-3",
+      "script": "./src/socket/index.js",
+      "args": "-p=21317",
+      "node_args": "",
+      "max_memory_restart": "2G"
+    },
+    {
+      "name": "logic-1",
+      "script": "./src/logic/index.js",
+      "args": "-p=10003",
+      "node_args": "",
+      "max_memory_restart": "2G"
+    },
+    {
+      "name": "logic-2",
+      "script": "./src/logic/index.js",
+      "args": "-p=10004",
+      "node_args": "",
+      "max_memory_restart": "2G"
+    },
+    {
+      "name": "worker-message-1",
+      "script": "./src/worker/message.js",
+      "args": "-n=1",
+      "node_args": "",
+      "max_memory_restart": "2G"
+    },
+    {
+      "name": "worker-message-2",
+      "script": "./src/worker/message.js",
+      "args": "-n=2",
+      "node_args": "",
+      "max_memory_restart": "2G"
+    }
+  ]
+}

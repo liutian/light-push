@@ -1,0 +1,15 @@
+---
+
+default: &default #所有时间以秒为单位
+  server: http://127.0.0.1:21314 #服务器地址
+  client_start_index: 100 #客户端uuid初始值
+  client_platform: android #客户端平台
+  client_namespace: /demo #客户端空间
+  client_total: 100 #创建的客户端链接总数
+  client_prefix: ww  #每个客户uuid的前缀
+  client_connect_interval: 1 #每个客户端创建的时间间隔
+  public_room: 33dd  #公共房间的房间名
+  room_type_list:  #房间大类列表
+    - {prefix: ss, total: 1000, random_select_count: 10, send_msg_odds: 10}
+    - {prefix: www, total: 10000, random_select_count: 50, send_msg_odds: 100}
+    - {prefix: wwwe, total: 1000, random_select_count: 10, send_msg_odds: 30}

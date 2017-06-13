@@ -1,0 +1,20 @@
+{
+	"room": "33dd",
+	"namespace": "/visionet",
+	"ack": true,
+	"apnsName": "iosAppName2",
+	"apnsEnv": "dev",
+	"pushData": {
+		"apsData": {
+			"aps": {
+				"alert": "ffffffffff"
+			}
+		},
+		"pushType": 1,
+		"messageVo": {
+			"messageContent": "sdfdfss是地方地方是水电费adsads",
+			"messageType": "text"
+		}
+
+	}
+}
