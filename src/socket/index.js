@@ -24,4 +24,9 @@ const server = http.Server(function (req, res) {
   console.log('socket-io serving at ' + config.ip + ':' + config.port);
 });
 
-global._ipush_ioApp = io(server, { adapter: HomeAdapter, transports: config.transports });
+global._ipush_ioApp = io(server, {
+  adapter: HomeAdapter,
+  transports: config.transports,
+  pingInterval: config.pingInterval,
+  pingTimeout: config.pingTimeout
+});

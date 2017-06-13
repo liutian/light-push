@@ -69,11 +69,13 @@ async function connectionListener(socket) {
 
   //进入房间
   socket.on('joinRoom', function (rooms, callback) {
+    if (!Array.isArray(rooms)) rooms = [rooms];
     joinOrleaveRoomFn(socket, rooms, true, callback);
   });
 
   //离开房间
   socket.on('leaveRoom', function (rooms, callback) {
+    if (!Array.isArray(rooms)) rooms = [rooms];
     joinOrleaveRoomFn(socket, rooms, false, callback);
   });
 
