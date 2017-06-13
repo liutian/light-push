@@ -271,7 +271,8 @@ async function del(self, socket, room) {
       sid: socket.id,
       uuid: socket.handshake.query.uuid,
       userid: socket.handshake.query.userid,
-      room: room
+      rooms: [room],
+      clientOffline: false
     });
   }
 };
@@ -301,10 +302,12 @@ Adapter.prototype.delAll = async function (socket, fn) {
 async function delAll(self, socket) {
   let unsubscribeRooms = [];//保留这个变量可能以后还有用
   let nspName = self.nsp.name;
+  let roomList = [];
 
   let mapId = self.sids.get(socket.id);
   if (mapId !== undefined) {
     for (let room of mapId.keys()) {
+      roomList.push(room);
       let mapRoom = self.rooms.get(room);
 
       if (mapRoom !== undefined) {
@@ -334,7 +337,9 @@ async function delAll(self, socket) {
     last_disconnect_time: (new Date()).getTime()
   });
 
+  //删除连接
   self.sids.delete(socket.id);
+  //清除空房间
   if (mapId !== undefined) {
     for (let room of mapId.keys()) {
       let mapRoom = self.rooms.get(room);
@@ -347,7 +352,22 @@ async function delAll(self, socket) {
     }
   }
 
+  //广播下线通知
+  if (config.room_activity_broadcast && socket.handshake.query.activityBroadcast) {
+    roomList.forEach(function (room) {
+      self.nsp.in(room);
+    });
+    self.nsp.except = [socket.id];
+    self.nsp.emit('peopleLeave', {
+      sid: socket.id,
+      uuid: socket.handshake.query.uuid,
+      userid: socket.handshake.query.userid,
+      rooms: roomList,
+      clientOffline: true
+    });
+  }
 
+  //发送下线通知到第三方服务器
   let nspData = namespace.data[nspName];
   if (nspName != '/' && nspData.disconnect_callback) {
 

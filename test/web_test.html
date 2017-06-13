@@ -1,63 +1,66 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <meta charset="UTF-8">
-    <title>demo</title>
+  <meta charset="UTF-8">
+  <title>demo</title>
 </head>
+
 <body>
 
 
-<script src="http://127.0.0.1:21314/socket.io/socket.io.js"></script>
-<script>
-    try{
-        var uuid = window.parseInt(Math.random() * 1000000);
-        var socket = io.connect('http://127.0.0.1:21314/demo?userid=test2&uuid=3454545');
-    }catch(e){
-        alert('error:' + e);
+  <script src="http://127.0.0.1:21314/socket.io/socket.io.js"></script>
+  <script>
+    try {
+      var uuid = window.parseInt(Math.random() * 1000000);
+      var socket = io.connect('http://127.0.0.1:21314/demo?userid=test2&uuid=22222222&activityBroadcast=true');
+    } catch (e) {
+      alert('error:' + e);
     }
-    socket.on('connect',function(){
-        var rooms = ['room1'];
+    socket.on('connect', function () {
+      var rooms = ['room1'];
 
-        socket.emit('joinRoom',rooms,function(result){
-            console.log('joinRoom:' + JSON.stringify(result));
-        });
+      socket.emit('joinRoom', rooms, function (result) {
+        console.log('joinRoom:' + JSON.stringify(result));
+      });
 
-        socket.emit('info', {clientId: 'dfdfdfdf', device_token: 'dfdfdfdf'}, function (data){
-            console.log('info' + JSON.stringify(data));
-        });
+      socket.emit('info', { clientId: 'dfdfdfdf', device_token: 'dfdfdfdf' }, function (data) {
+        console.log('info' + JSON.stringify(data));
+      });
 
 
-        socket.on('push',function(data){
-            console.log('push:' + JSON.stringify(data));
-            socket.emit('ackPush',{id: data.id});
-        });
+      socket.on('push', function (data) {
+        console.log('push:' + JSON.stringify(data));
+        socket.emit('ackPush', { id: data.id });
+      });
 
-        socket.on('ok', function (data){
-            console.log('ok: ' + JSON.stringify(data));
-        })
+      socket.on('ok', function (data) {
+        console.log('ok: ' + JSON.stringify(data));
+      })
 
-        socket.on('joinRoom',function(data){
-            alert('joinRoom:' + data);
-        });
+      socket.on('joinRoom', function (data) {
+        alert('joinRoom:' + data);
+      });
 
-        socket.on('leaveRoom',function(data){
-            alert('leaveRoom:' + data);
-        });
+      socket.on('leaveRoom', function (data) {
+        alert('leaveRoom:' + data);
+      });
 
-        socket.on('peopleJoin',function(data){
-            alert('peopleJoin:' + data);
-        });
+      socket.on('peopleJoin', function (data) {
+        alert('peopleJoin:' + data);
+      });
 
-        socket.on('peopleLeave',function(data){
-            alert('peopleLeave:' + data);
-        });
+      socket.on('peopleLeave', function (data) {
+        alert('peopleLeave:' + data);
+      });
 
-        socket.on('offlineMessage', function (msgList){
-            console.log('offlineMessage: ' + JSON.stringify(msgList));
-        });
+      socket.on('offlineMessage', function (msgList) {
+        console.log('offlineMessage: ' + JSON.stringify(msgList));
+      });
 
 
     });
-</script>
+  </script>
 </body>
+
 </html>

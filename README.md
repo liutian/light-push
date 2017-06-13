@@ -45,7 +45,7 @@ var socket = io.connect('http://host:21314/<namespace>?[userid]=u001&<uuid>=edgw
 - `userid` : 用户ID,系统支持单用户多端登陆,如果空则取uuid作为userid
 - `uuid` : 客户端唯一标示,必填
 - `platform` : 客户端平台类型,默认web
-- `activityBroadcast` : (true|false)客户端每次上线下线时是否向它所在的房间发起一次广播  广播事件，下线: `peopleLeave` 上线: `peopleJoin` 事件参数: `sid` `uuid` `userid` `room`
+- `activityBroadcast` : (true|false)客户端每次上线下线时是否向它所在的房间发起一次广播  广播事件，下线: `peopleLeave` 上线: `peopleJoin` 事件参数: `sid` `uuid` `userid` `rooms` `clientOffline`
 
 > android和ios平台只需要记住服务器链接地址,并将地址传递给相对应的接口就可以了
 
