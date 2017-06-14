@@ -28,6 +28,10 @@
         console.log('info' + JSON.stringify(data));
       });
 
+      socket.emit('report-push', { id: 26 }, function (result) {
+        console.log('report-push:' + JSON.stringify(result));
+      })
+
 
       socket.on('push', function (data) {
         console.log('push:' + JSON.stringify(data));

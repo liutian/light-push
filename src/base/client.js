@@ -49,7 +49,7 @@ async function apnsFn(data) {
 }
 
 async function infoFn(id, data) {
-  if (!id) apiError.throw(400, 'can not find id');
+  if (!id) apiError.throw('can not find id');
 
   if (data) {
     data = _util.pick(data, 'device_token mobile system leaveMessage');

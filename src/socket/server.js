@@ -5,6 +5,7 @@ const async = require('async');
 const redisFactory = require('../util/redis-factory');
 const config = require('../config');
 const clientService = require('../base/client');
+const reportPushService = require('../logic/report-push');
 const _util = require('../util/util');
 const logger = log4js.getLogger('socket_service');
 const _redis = redisFactory.getInstance(true);
@@ -146,6 +147,15 @@ async function connectionListener(socket) {
       callback({ status: err.status || 500, msg: err.msg || err.message });
     });
   });
+
+  socket.on('report-push', function (data, callback) {
+    data.namespace = socket.nsp.name;
+    let reportResult = reportPushService.get(data).then(function (result) {
+      callback(result);
+    }, function (err) {
+      callback({ status: err.status || 500, msg: err.msg || err.message });
+    });
+  })
 }
 
 

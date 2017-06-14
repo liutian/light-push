@@ -21,14 +21,14 @@ async function getFn(data) {
   data = _util.pick(data, 'namespace id ackDetail');
 
   if (!data.namespace) {
-    apiError.throw(400, 'namespace can not be empty');
+    apiError.throw('namespace can not be empty');
   } else if (!data.id) {
-    apiError.throw(400, 'id can not be empty');
+    apiError.throw('id can not be empty');
   }
 
   let hpushmsg = await _redis.hgetall(config.redis_push_msg_id_prefix + data.id);
   if (!hpushmsg || !hpushmsg.id) {
-    apiError.throw(400, 'this id not exists');
+    apiError.throw('this id not exists');
   }
 
   let nspAndRoom = hpushmsg.namespace + '_' + hpushmsg.room;
@@ -75,14 +75,14 @@ async function listFn(data) {
   data = _util.pick(data, 'namespace page size');
 
   if (!data.namespace) {
-    apiError.throw(400, 'namespace can not be empty');
+    apiError.throw('namespace can not be empty');
   }
 
   let lkey = PUSH_MESSAGE_LIST_PREFIX + data.namespace;
   data.page = Math.min(data.page || 1, config.push_message_list_max_limit);
   data.size = Math.min(data.size || 20, 100);
   if (data.page * data.size > config.push_message_list_max_limit) {
-    apiError.throw(400, 'The query is beyond limit');
+    apiError.throw('The query is beyond limit');
   }
 
   let startIndex = (data.page - 1) * data.size;

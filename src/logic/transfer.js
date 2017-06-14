@@ -27,7 +27,7 @@ async function transferFn(data) {
     || !data.sourceRooms
     || data.sourceRooms.length <= 0
     || !data.type || !data.namespace) {
-    apiError.throw(400, 'targetRoom and sourceRooms and type and namespace can not be empty');
+    apiError.throw('targetRoom and sourceRooms and type and namespace can not be empty');
   }
   let nspAndRoom = data.namespace + '_' + data.targetRoom;
 

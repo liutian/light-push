@@ -61,7 +61,7 @@ async function init() {
 }
 
 async function getFn(key) {
-  if (!key) apiError.throw(400, 'can not find key');
+  if (!key) apiError.throw('can not find key');
   let vList = await _redis.hmget(config.redis_namespace_set_prefix + key, nspKList);
   let nsp = {};
   nspKList.forEach(function (k, index) {
@@ -90,7 +90,7 @@ async function listFn() {
 }
 
 async function delFn(key) {
-  if (!key) apiError.throw(400, 'can not find key');
+  if (!key) apiError.throw('can not find key');
   if (key.indexOf('/') != 0) key = '/' + key;
   await _redis.zrem(config.redis_namespace_key_z, key);
   await _redis.del(config.redis_namespace_set_prefix + key);
@@ -100,7 +100,7 @@ async function delFn(key) {
 
 
 async function saveFn(nsp) {
-  if (!nsp || !nsp.key) apiError.throw(400, 'key is null');
+  if (!nsp || !nsp.key) apiError.throw('key is null');
   nsp = _util.pick(nsp, nspKeys);
 
   let apns_list;
