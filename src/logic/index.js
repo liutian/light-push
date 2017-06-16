@@ -21,6 +21,8 @@ const app = new Koa();
 
 //替换koa默认的异常处理
 app.on('error', onerror);
+//跨域请求处理
+app.use(cors);
 //记录响应时间
 app.use(responseTime);
 //接口授权
@@ -74,5 +76,19 @@ async function corsFilter(ctx, next) {
     ctx.body = '';
   } else {
     await next();
+  }
+}
+
+async function cors(ctx, next) {
+
+  await next();
+
+  //只需要检查options类型的请求，因为系统所有接口的Content-Type都为application/json，所有浏览器肯定会先发送预检请求
+  ctx.set('Access-Control-Allow-Origin', ctx.get('Origin'));
+  ctx.set('Access-Control-Allow-Credentials', true);
+  if (ctx.method == 'OPTIONS') {
+    ctx.set('Access-Control-Allow-Methods', 'GET, POST');
+    ctx.set('Access-Control-Allow-Headers', 'Content-Type, AdminKey, Nonce, Timestamp, Signature, AppKey, Token, AppId, RefKey');
+    ctx.set('Access-Control-Max-Age', 2592000);//有效期30天
   }
 }
