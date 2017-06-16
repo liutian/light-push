@@ -1,5 +1,6 @@
 const request = require('request');
 const log4js = require('log4js');
+const querystring = require('querystring');
 
 const config = require('../config');
 const namespace = require('../base/namespace');
@@ -75,8 +76,9 @@ module.exports = function (socket, next) {
     return next();
   }
 
+  let url = nspData.connect_callback + '?' + querystring.stringify(socket.handshake.query);
   let options = {
-    url: nspData.connect_callback,
+    url: url,
     method: 'get',
     json: true,
     headers: {
