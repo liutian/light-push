@@ -111,6 +111,14 @@ socket.on('push',function(data){
 - `room` : `[String]` 推送的目标房间
 - `sendDate` : `[Number]` 推送时间
 
+###第三方服务器设置房间下的客户端apns消息免打扰
+```
+/api/auth/room-apns POST
+```
+请求参数:
+- `room` : `[String]` 房间下的所有客户端都会进行操作
+- `add` : `[[String]]` 向免打扰列表添加房间名,类型为数组
+- `remove` : `[[String]]` 从免打扰列表中删除房间名,类型为数组
 
 
 ###ios客户端读取/设置apns消息免打扰
