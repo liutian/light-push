@@ -98,7 +98,7 @@ module.exports = function (socket, next) {
         socket.handshake.userid = body.userid;
       }
 
-      if (_.isArray(body.rooms)) {
+      if (Array.isArray(body.rooms)) {
         socket.handshake.rooms = body.rooms;
       }
 

@@ -23,9 +23,11 @@ const _redis = redisFactory.getInstance(true);
 const apnProviders = {};
 const resultSeparator = '  >>>>  ';
 
-console.log('worker message starting ...');
 
-init();
+setTimeout(function () {
+  init();
+  console.log('worker message starting ...');
+}, 3000);
 
 
 //*******************************************************************
@@ -79,9 +81,9 @@ function postMessage() {
       return;
     }
 
-    if (!_.isArray(result) || !result[1]) return;
+    if (!Array.isArray(result) || !result[1]) return;
 
-    co.wrap(_postMessage)(result[1]).then(function () {
+    _postMessage(result[1]).then(function () {
       postMessage();
     }, function (e) {
       logger.error('postMessage file id: ' + result[1] + ' error: ' + e);

@@ -53,11 +53,11 @@ module.exports = {
 
 
 async function init() {
-  var nspList = await listFn();
+  let nspList = await listFn();
   nspList.forEach(function (v) {
     createApnsObj(v);
     nspObj[v.key] = v;
-  })
+  });
 }
 
 async function getFn(key) {
@@ -184,7 +184,7 @@ function createApnsObj(nsp) {
 
 function addApnsChangeListenerFn(listener) {
   for (let key in nspObj) {
-    let apnsList = nspObj[key].anps_list;
+    let apnsList = nspObj[key].apns_list;
     apnsList.forEach(function (apn) {
       listener(apn, key);
     })
