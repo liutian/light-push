@@ -88,7 +88,7 @@ async function cors(ctx, next) {
   ctx.set('Access-Control-Allow-Credentials', true);
   if (ctx.method == 'OPTIONS') {
     ctx.set('Access-Control-Allow-Methods', 'GET, POST');
-    ctx.set('Access-Control-Allow-Headers', 'Content-Type, AdminKey, Nonce, Timestamp, Signature, AppKey, Token, AppId, RefKey');
+    ctx.set('Access-Control-Allow-Headers', 'Content-Type, AdminKey, Nonce, Timestamp, Signature, AppKey, Token, AppId, RefKey, Authorization');
     ctx.set('Access-Control-Max-Age', 2592000);//有效期30天
   }
 }

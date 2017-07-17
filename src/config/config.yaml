@@ -1,9 +1,9 @@
 ---
 
 default: &default
-  socket_ip: 192.168.0.108
+  socket_ip: 192.168.0.18
   socket_port: 21314
-  logic_ip: 192.168.0.108
+  logic_ip: 192.168.0.18
   logic_port: 56789
 
   transports:

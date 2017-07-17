@@ -22,6 +22,8 @@ module.exports = function (router) {
   router.post('/api/auth/room-apns', roomApns);
 
   router.get('/api/auth/namespace', nspGet);
+  router.post('/api/admin/login', login);
+  router.post('/api/auth/login', login);
   router.get('/api/admin/namespace/del/:key', nspDel);
   router.get('/api/admin/namespace/list', nspList);
   router.post('/api/admin/namespace/save', nspSave);
@@ -31,6 +33,9 @@ module.exports = function (router) {
 
 //*******************************************************************
 
+async function login(ctx, next) {
+  ctx.body = {};
+}
 
 async function push(ctx, next) {
   ctx.request.body.namespace = ctx.state.namespace;

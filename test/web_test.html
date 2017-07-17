@@ -13,12 +13,12 @@
   <script>
     try {
       var uuid = window.parseInt(Math.random() * 1000000);
-      var socket = io.connect('http://192.168.0.108:21314/demo?userid=test2&uuid=22222222&activityBroadcast=true');
+      var socket = io.connect('http://192.168.0.108:21314/demo?appid=5948cf59382bb7f033ef8992&userid=6&uuid=30893960-2A8E-4DB4-B030-7D11223A53DE&platform=ios&token=b973d98284&refKey=6');
     } catch (e) {
       alert('error:' + e);
     }
     socket.on('connect', function () {
-      var rooms = ['8-webchat'];
+      var rooms = ['5936731676bf9006cebbfc00'];
 
       socket.emit('joinRoom', rooms, function (result) {
         console.log('joinRoom:' + JSON.stringify(result));

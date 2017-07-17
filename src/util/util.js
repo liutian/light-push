@@ -5,17 +5,17 @@ exports.pick = pickFn;
 
 exports.random = randomFn;
 
-exports.isDate = function (value) { objProToString.call(value) == '[object Date]' }
+exports.isDate = function (value) { return objProToString.call(value) == '[object Date]' }
 
-exports.isRegExp = function (value) { objProToString.call(value) == '[object RegExp]' }
+exports.isRegExp = function (value) { return objProToString.call(value) == '[object RegExp]' }
 
-exports.isNumber = function (value) { objProToString.call(value) == '[object Number]' }
+exports.isNumber = function (value) { return objProToString.call(value) == '[object Number]' }
 
-exports.isString = function (value) { objProToString.call(value) == '[object String]' }
+exports.isString = function (value) { return objProToString.call(value) == '[object String]' }
 
-exports.isBoolean = function (value) { objProToString.call(value) == '[object Boolean]' }
+exports.isBoolean = function (value) { return objProToString.call(value) == '[object Boolean]' }
 
-exports.isObject = function (value) { objProToString.call(value) == '[object Object]' }
+exports.isObject = function (value) { return objProToString.call(value) == '[object Object]' }
 
 
 /*------------------------------------分割线 -----------------------------*/
