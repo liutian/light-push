@@ -8,7 +8,7 @@ const _util = require('../util/util');
 const logger = log4js.getLogger('client');
 const _redis = redisFactory.getInstance(true);
 
-const ROOM_CLIENT_SET_PREFIX = config.redis_room_client_set_prefix;//保存单个命名空间单个房间下的客户端集合
+const TOTAL_ROOM_CLIENT_SET_PREFIX = config.redis_total_room_client_set_prefix;//保存单个命名空间单个房间下的客户端集合
 
 //这里所说的客户端是通过 namespace + userid + platform + uuid 作为唯一标示的,而非只通过uuid为标示
 exports.apns = apnsFn;
@@ -73,7 +73,7 @@ async function roomApnsFn(data) {
   if (!data.namespace) apiError.throw('can not find namespace');
   let nspAndRoom = data.namespace + '_' + data.room;
 
-  let clientList = await _redis.smembers(ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}');
+  let clientList = await _redis.smembers(TOTAL_ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}');
 
   for (let i = 0; i < clientList.length; i++) {
     let clientId = clientList[i];
@@ -115,7 +115,7 @@ async function roomLeaveMessageFn(data) {
   if (!data.namespace) apiError.throw('can not find namespace');
   let nspAndRoom = data.namespace + '_' + data.room;
 
-  let clientList = await _redis.smembers(ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}');
+  let clientList = await _redis.smembers(TOTAL_ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}');
 
   for (let i = 0; i < clientList.length; i++) {
     let clientId = clientList[i];

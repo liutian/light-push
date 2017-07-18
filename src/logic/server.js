@@ -18,7 +18,7 @@ module.exports = function (router) {
 
   router.post('/api/auth/transfer', transfer);
 
-  router.post('/api/auth/client/:id', client);
+  router.post('/api/auth/client/', client);
   router.post('/api/auth/room-apns', roomApns);
 
   router.get('/api/auth/namespace', nspGet);
@@ -66,7 +66,7 @@ async function transfer(ctx, next) {
 }
 
 async function client(ctx, next) {
-  ctx.body = await clientService.info(ctx.params.id);
+  ctx.body = await clientService.info(ctx.request.body.id, ctx.request.body);
 }
 
 async function roomApns(ctx, next) {
