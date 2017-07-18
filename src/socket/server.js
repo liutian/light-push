@@ -199,8 +199,7 @@ async function updateClientInfo(socket) {
   let client_hash_id = config.redis_client_hash_prefix + socket.id;
   let client = {
     userid: socket.handshake.userid,
-    last_connect_time: (new Date()).getTime(),
-    leaveMessage: true
+    last_connect_time: (new Date()).getTime()
   };
 
   let isExists = await _redis.exists(client_hash_id);

@@ -27,6 +27,7 @@ module.exports = function (router) {
   router.get('/api/admin/namespace/del/:key', nspDel);
   router.get('/api/admin/namespace/list', nspList);
   router.post('/api/admin/namespace/save', nspSave);
+  router.post('/api/auth/room-leave-message', roomLeaveMessage);
 
 }
 
@@ -95,4 +96,8 @@ async function nspList(ctx, next) {
 }
 
 
-
+async function roomLeaveMessage(ctx, next) {
+  ctx.request.body.namespace = ctx.state.namespace;
+  await clientService.roomLeaveMessage(ctx.request.body);
+  ctx.body = {};
+}

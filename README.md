@@ -116,9 +116,18 @@ socket.on('push',function(data){
 /api/auth/room-apns POST
 ```
 请求参数:
-- `room` : `[String]` 房间下的所有客户端都会进行操作
+- `room` : `[String]` 房间名称
 - `add` : `[[String]]` 向免打扰列表添加房间名,类型为数组
 - `remove` : `[[String]]` 从免打扰列表中删除房间名,类型为数组
+
+
+###第三方服务器设置房间下所有客户端是否保存离线消息
+```
+/api/auth/room-leave-message POST
+```
+请求参数:
+- `room` : `[String]` 房间名称
+- `leaveMessage` : `[Boolean]` 是否保存离线消息
 
 
 ###ios客户端读取/设置apns消息免打扰

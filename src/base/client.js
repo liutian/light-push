@@ -14,6 +14,7 @@ const ROOM_CLIENT_SET_PREFIX = config.redis_room_client_set_prefix;//保存单�
 exports.apns = apnsFn;
 exports.info = infoFn;
 exports.roomApns = roomApnsFn;
+exports.roomLeaveMessage = roomLeaveMessageFn;
 
 
 async function apnsFn(data) {
@@ -108,3 +109,20 @@ async function roomApnsFn(data) {
 }
 
 
+async function roomLeaveMessageFn(data) {
+  data = _util.pick(data, 'room leaveMessage namespace');
+  if (!data.room) apiError.throw('can not find room');
+  if (!data.namespace) apiError.throw('can not find namespace');
+  let nspAndRoom = data.namespace + '_' + data.room;
+
+  let clientList = await _redis.smembers(ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}');
+
+  for (let i = 0; i < clientList.length; i++) {
+    let clientId = clientList[i];
+
+    await _redis.hmset(config.redis_client_hash_prefix + clientId, {
+      leaveMessage: data.leaveMessage,
+      update_date: Date.now()
+    });
+  }
+}
