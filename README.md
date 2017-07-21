@@ -369,10 +369,13 @@ openssl pkcs12 -in key.p12 -nocerts -out key.pem -nodes
 
 
 ### 安装运行环境
-- [安装nodejs](https://nodejs.org/en/download/package-manager/) 版本 v8.1.0 以上
-- 安装pm2 : `npm install -g pm2` 版本 v2.0.18 以上
-- [安装redis](https://redis.io/download) 版本 2.4.10 以上
+- [安装nodejs](https://nodejs.org/en/download/package-manager/) 版本 v8.2.1 以上
+- 安装pm2 : `npm install -g pm2` 版本 v2.6.1 以上
+- [安装redis](https://redis.io/download) 版本 4.0.0 以上
 
 ### docker
-- https://hub.docker.com/r/liuss/ipush/
+- 创建容器： `sudo docker run -id -p 80:80 --name push --privileged liuss/push:1.0.3 init`
+- 进入容器：`sudo docker exec -it push /bin/bash`
+- 启动服务：`/root/push.sh`
+- 访问管理页面: `http://127.0.0.1/push-admin`
 

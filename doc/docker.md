@@ -55,20 +55,25 @@
 - `cd /root/push/code/web/push-admin-master && npm install && npm run build && rm -rf /home/web/push-admin/*.* && cp -R dist/* /home/web/push-admin && chown -R nginx:nginx /home/web/push-admin`
 13. 启动项目
 - `systemctl start nginx && redis-server /etc/redis.conf && cd /root/push/code/server/push-master && pm2 start app.json`
-14. 开机自启动,修改/etc/rc.local 新增 命令： `redis-server /etc/redis.conf`  `cd /root/push/code/server/push-master && pm2 delete all && pm2 start app.json`
-- `systemctl enable nginx.service`
-15. 导出镜像
+14. 导出镜像
 - `sudo docker export push -o push.tar`
+15. 导入镜像
+- `sudo cat push.tar | sudo docker import - liuss/push:1.0.1`
+16. 创建Dockerfile文件内容如下
+- `FROM liuss/push:1.0.1`
+- `MAINTAINER liussdne@gmail.com`
+- `CMD "systemctl start nginx && redis-serve /etc/redis.conf && cd /root/push/code/server/push-master && pm2 start app.json"`
+17. 通过Dockerfile构建新的镜像
+- `sudo docker build -t liuss/push:1.0.2 .`
 
 
 ### 基于推送服务器镜像启动容器
-1. 导入镜像
-- `sudo cat push.tar | sudo docker import - liuss/push`
+
 2. 创建容器
-- `sudo docker run -id -p 80:80 --name push --privileged liuss/push init`
+- `sudo docker run -id -p 80:80 --name push --privileged liuss/push:1.0.2 init`
 3. 进入容器
 - `sudo docker exec -it push /bin/bash`
-4. 启动服务[可选]
+4. 启动服务
 - `systemctl start nginx && redis-server /etc/redis.conf && cd /root/push/code/server/push-master && pm2 start app.json`
 
 
