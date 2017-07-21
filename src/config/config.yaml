@@ -1,19 +1,19 @@
 ---
 
 default: &default
-  socket_ip: 192.168.0.18
+  socket_ip: 127.0.0.1
   socket_port: 21314
-  logic_ip: 192.168.0.18
+  logic_ip: 127.0.0.1
   logic_port: 56789
 
   transports:
     - polling
-    #- websocket #服务器端尽量开启websocket, 当有大量客户端断开时,如果客户端与服务器通过websocket连接的话,可以保证服务器回调函数能可靠的调用(不存在回调不执行的情况)
+    - websocket #服务器端尽量开启websocket, 当有大量客户端断开时,如果客户端与服务器通过websocket连接的话,可以保证服务器回调函数能可靠的调用(不存在回调不执行的情况)
   pingInterval: 20000
   pingTimeout: 10000
 
 
-  redis_address: '192.168.16.45:6379'
+  redis_address: '127.0.0.1:6379'
 #    - 127.0.0.1:10010
 #    - 127.0.0.1:10020
   redis_prefix: ipush_
