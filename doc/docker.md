@@ -30,9 +30,9 @@
 ### 制作推送服务器镜像
 
 1. 导入基础镜像
-- `sudo cat centos7.tar | sudo docker import - liuss/centos7`
+- `sudo cat centos7.tar | sudo docker import - liuss/centos-7.3`
 2. 创建容器
-- `sudo docker run -id --name push --privileged liuss/centos7 init`
+- `sudo docker run -id --name push --privileged liuss/centos-7.3 init`
 3. 进入容器
 - `sudo docker exec -it push /bin/bash`
 4. 安装nodejs
