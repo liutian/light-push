@@ -373,9 +373,7 @@ openssl pkcs12 -in key.p12 -nocerts -out key.pem -nodes
 - 安装pm2 : `npm install -g pm2` 版本 v2.6.1 以上
 - [安装redis](https://redis.io/download) 版本 4.0.0 以上
 
-### docker
-- 创建容器： `sudo docker run -id -p 80:80 --name push --privileged liuss/push:1.0.3 init`
-- 进入容器：`sudo docker exec -it push /bin/bash`
-- 启动服务：`/root/push.sh`
+### 通过docker快速构建整个推送服务
+- `docker run -id -p 80:80 --name push-demo liuss/push /root/push/start.sh`
 - 访问管理页面: `http://127.0.0.1/push-admin`
 
