@@ -375,5 +375,5 @@ openssl pkcs12 -in key.p12 -nocerts -out key.pem -nodes
 
 ### 通过docker快速构建整个推送服务
 - `docker run -id -p 80:80 --name push-demo liuss/push /root/push/start.sh`
-- 访问管理页面: `http://127.0.0.1/push-admin`
+- 访问管理页面: `http://127.0.0.1/push-admin` 登录名 liuss 密码 123456
 
