@@ -45,8 +45,8 @@ function loadConfig(env) {
   }
 
   //port和ip为特殊配置只能通过环境变量获取
-  config[e].port = env.p || env.port;
-  config[e].ip = env.i || env.ip;
+  config[e].port = env.p || env.port || config[e].port;
+  config[e].ip = env.i || env.ip || config[e].ip;
 
   return config[e];
 }

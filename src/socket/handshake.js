@@ -83,7 +83,8 @@ module.exports = function (socket, next) {
     json: true,
     headers: {
       cookie: socket.handshake.headers.cookie,
-      authorization: nspData.callback_auth
+      authorization: nspData.callback_auth,
+      namespace: nspName
     }
   }
 

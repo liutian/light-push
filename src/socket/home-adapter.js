@@ -377,7 +377,8 @@ async function delAll(self, socket) {
       json: true,
       headers: {
         cookie: socket.handshake.headers.cookie,
-        authorization: nspData.callback_auth
+        authorization: nspData.callback_auth,
+        namespace: nspName
       },
       body: {
         query: socket.handshake.query
