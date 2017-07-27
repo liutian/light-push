@@ -25,6 +25,11 @@ module.exports = function (socket, next) {
     return next(new Error('this namespace not found'));
   }
 
+  if (nspData && nspData.offline == 'on') {
+    socket.disconnect();
+    return next(new Error('this namespace offline'));
+  }
+
   //如果命名空间不是主命名空间,则uuid取同一个client下主命名空间socket的uuid,保证uuid以主命名空间下的socket为准
   if (socket.nsp.name != '/') {
     let indexSocket;

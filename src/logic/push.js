@@ -44,6 +44,8 @@ async function pushFn(data) {
   let nspConfig = namespace.data[data.namespace];
   if (!nspConfig) {
     apiError.throw('this namespace lose');
+  } else if (nspConfig.offline == 'on') {
+    apiError.throw('this namespace offline');
   }
 
   //判断apsData转化为JSON字符串后是否超过预定长度

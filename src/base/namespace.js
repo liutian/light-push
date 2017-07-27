@@ -12,11 +12,23 @@ const _redis_sub = redisFactory.getInstance();
 const nspDelChannel = 'nsp_del';
 const nspSaveChannel = 'nsp_save';
 
-const nspKeys = 'key name connect_callback disconnect_callback auth_passwd apns_list update_date client_ip callback_auth';
+const CLIENT_SET_PREFIX = config.redis_client_set_prefix;//保存单个命名空间下的客户端集合
+const USER_SET_PREFIX = config.redis_user_set_prefix;//保存单个命名空间下的用户集合
+const ROOM_SET_PREFIX = config.redis_room_set_prefix;//保存单个命名空间下的房间集合
+const ROOM_USER_SET_PREFIX = config.redis_room_user_set_prefix;//保存单个命名空间单个房间下的用户集合
+const ROOM_CLIENT_SET_PREFIX = config.redis_room_client_set_prefix;//保存单个命名空间单个房间下的客户端集合
+const USER_ROOM_SET_PREFIX = config.redis_user_room_set_prefix;
+const IOS_ROOM_CLIENT_SET_PREFIX = config.redis_ios_room_client_set_prefix;
+const ANDROID_ROOM_CLIENT_SET_PREFIX = config.redis_android_room_client_set_prefix;
+
+const nspKeys = 'key name connect_callback disconnect_callback auth_passwd apns_list update_date client_ip callback_auth offline';
 const nspKList = nspKeys.split(/\s+/);
 const apnsKeys = 'name apns_env apns_expiration apns_topic apns_dev_cert apns_dev_key apns_production_cert apns_production_key del token_key token_keyId token_teamId';
 const nspObj = {};
 const apnsChangeListeners = [];
+const offlineListeners = [];
+
+const redis_db = redisFactory.getInstance(true);
 
 _redis_sub.subscribe(nspDelChannel, function (err) {
   if (err) logger.error('nsp_del subscribe channel error: ' + err);
@@ -43,14 +55,70 @@ module.exports = {
   get: getFn,
   list: listFn,
   data: nspObj,
-  addApnsChangeListener: addApnsChangeListenerFn
+  addOfflineListener: addOfflineListenerFn,
+  addApnsChangeListener: addApnsChangeListenerFn,
+  clearDirtyClient: clearDirtyClientFn
 }
 
 
 
 //*******************************************************************
 
+async function clearDirtyClientFn(nspName) {
+  if (!nspName) return;
 
+  let roomList = await _redis.smembers(ROOM_SET_PREFIX + nspName);
+  let clientList = await _redis.smembers(CLIENT_SET_PREFIX + nspName);
+  let userList = await _redis.smembers(USER_SET_PREFIX + nspName);
+
+
+  let redisMulti = redis_db.multi();
+  let disconnectTime = Date.now();
+  clientList.forEach(clientId => {
+    redisMulti = redisMulti.del(config.redis_client_hash_prefix + clientId, {
+      last_disconnect_time: disconnectTime
+    });
+  });
+  redisMulti = redisMulti.del(CLIENT_SET_PREFIX + nspName);
+
+  try {
+    await redisMulti.exec();
+  } catch (e) {
+    logger.error('clear dirty client 1' + e);
+  }
+
+
+  redisMulti = redis_db.multi();
+  userList.forEach(userName => {
+    redisMulti = redisMulti.del(USER_ROOM_SET_PREFIX + nspName + '_' + userName);
+  });
+  redisMulti = redisMulti.del(USER_SET_PREFIX + nspName);
+
+  try {
+    await redisMulti.exec();
+  } catch (e) {
+    logger.error('clear dirty client 2' + e);
+  }
+
+
+  redisMulti = redis_db.multi();
+  roomList.forEach(room => {
+    let nspAndRoom = nspName + '_' + room;
+    redisMulti = redisMulti.del(ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}');
+    redisMulti = redisMulti.del(IOS_ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}');
+    redisMulti = redisMulti.del(ANDROID_ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}');
+    redisMulti = redisMulti.del(ROOM_USER_SET_PREFIX + nspAndRoom);
+  });
+  redisMulti = redisMulti.del(ROOM_SET_PREFIX + nspName);
+
+  try {
+    await redisMulti.exec();
+  } catch (e) {
+    logger.error('clear dirty client 3' + e);
+  }
+
+
+}
 
 async function init() {
   let nspList = await listFn();
@@ -163,6 +231,11 @@ function _saveFn(nsp) {
     if (k == 'key') continue;
     oldNsp[k] = nsp[k];
   }
+  if (nsp.offline == 'on') {
+    offlineListeners.forEach(function (listener) {
+      listener(nsp.key, nsp);
+    });
+  }
   createApnsObj(oldNsp);
 }
 
@@ -192,3 +265,6 @@ function addApnsChangeListenerFn(listener) {
   apnsChangeListeners.push(listener);
 }
 
+function addOfflineListenerFn(listener) {
+  offlineListeners.push(listener);
+}

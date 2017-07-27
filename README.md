@@ -298,6 +298,7 @@ socket.on('peopleLeave',function(data){
 - `apns_list` apns配置项列表 数组类型
 - `update_date` 更新时间
 - `client_ip` 更新命名空间的第三方服务器地址
+- `offline` 是否离线，on|off 如果为 on 则不接入任何客户端连接
 
 `apns_list` : `[Array]` 数组中的元素结构如下
 - `name` apns配置名称 和推送接口的 `apnsName` 参数对应

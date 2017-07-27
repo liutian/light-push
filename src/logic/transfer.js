@@ -4,6 +4,7 @@ const config = require('../config');
 const apiError = require('../util/api-error');
 const redisFactory = require('../util/redis-factory');
 const _util = require('../util/util');
+const namespace = require('../base/namespace');
 
 const logger = log4js.getLogger('logic_transfer');
 
@@ -22,6 +23,15 @@ exports.transfer = transferFn;
 async function transferFn(data) {
 
   data = _util.pick(data, 'namespace targetRoom sourceRooms type');
+
+
+  //判断命名空间是否存在
+  let nspConfig = namespace.data[data.namespace];
+  if (!nspConfig) {
+    apiError.throw('this namespace lose');
+  } else if (nspConfig.offline == 'on') {
+    apiError.throw('this namespace offline');
+  }
 
   if (!data.targetRoom
     || !data.sourceRooms

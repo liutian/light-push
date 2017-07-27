@@ -63,6 +63,19 @@ function Adapter(nsp) {
 
   nsp.use(handshake);
 
+  namespace.addOfflineListener(name => {
+    if (this.nsp.name != name) return;
+
+    let delay = Math.random() * (5000 + this.nsp.connected.length * 100);
+    setTimeout(() => {
+      Object.values(this.nsp.connected).forEach(socket => {
+        socket.disconnect();
+      });
+      this.rooms = new Map();
+      this.sids = new Map();
+    }, Math.min(delay, 1000 * 60 * 5));//最长延迟5分钟
+  })
+
 }
 
 
@@ -454,7 +467,7 @@ Adapter.prototype.broadcast = async function (packet, opts) {
     try {
       for (let id of mapSid.keys()) {
         socket = self.nsp.connected[id];
-        if (socket === undefined) continue;
+        if (!socket) continue;
 
         if (socket.client.conn.readyState != 'open' || (flags.volatile && !socket.client.conn.transport.writable)) {
           continue;
