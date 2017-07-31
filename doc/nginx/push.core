@@ -17,8 +17,8 @@ location /push-logic/ {
     proxy_next_upstream error timeout http_500 http_502 http_503 http_504;
 }
 
-location /push-admin/ {
-    alias /home/web/push-admin/;
+location /push-admin {
+    alias /home/web/push-admin;
     if ($uri ~* \.(css|js|png|jpg|gif|otf|eot|svg|ttf|woff|woff2)$) {
         expires max;
         add_header cache force;
