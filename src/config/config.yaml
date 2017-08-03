@@ -14,6 +14,7 @@ default: &default
 
 
   redis_address: '127.0.0.1:6379'
+  redis_password: 
 #    - 127.0.0.1:10010
 #    - 127.0.0.1:10020
   redis_prefix: ipush_

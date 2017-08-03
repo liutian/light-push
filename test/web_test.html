@@ -9,11 +9,12 @@
 <body>
 
 
-  <script src="http://192.168.0.18:21314/socket.io/socket.io.js"></script>
+  <script src="http://127.0.0.1:21314/socket.io/socket.io.js"></script>
   <script>
     try {
       var uuid = window.parseInt(Math.random() * 1000000);
-      var socket = io.connect('http://192.168.0.18:21314/demo?appid=5948cf59382bb7f033ef8992&userid=6&uuid=30893960-2A8E-4DB4-B030-7D11223A53DE&platform=ios&token=b973d98284&refKey=6');
+      var uuid = Math.random() * 10000;
+      var socket = io.connect('http://127.0.0.1:21314/demo?uuid=' + uuid);
     } catch (e) {
       alert('error:' + e);
     }

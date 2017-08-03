@@ -24,7 +24,8 @@ function create() {
     });
 
     var options = {
-      keyPrefix: config.redis_prefix
+      keyPrefix: config.redis_prefix,
+      password: config.redis_password
     };
 
     connection = new Redis.Cluster(addressArr, options);
@@ -32,7 +33,8 @@ function create() {
     var options = {
       host: config.redis_address.split(':')[0],
       port: config.redis_address.split(':')[1],
-      keyPrefix: config.redis_prefix
+      keyPrefix: config.redis_prefix,
+      password: config.redis_password
     };
 
     connection = new Redis(options);
