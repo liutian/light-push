@@ -1,10 +1,10 @@
-#ipush
+#push
 Push service based on Web Technology such as `polling` or `webSocket`
 
 #Quickstart
 ```
-$ git clone https://github.com/liutian/ipush3.git
-$ cd ipush3
+$ git clone https://github.com/liutian/push.git
+$ cd push
 $ npm install
 $ pm2 start app.json
 ```
