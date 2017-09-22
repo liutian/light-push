@@ -44,21 +44,21 @@
 7. 安装redis，并修改redis配置文件(后台运行，工作目录)
 - `wget http://download.redis.io/releases/redis-4.0.0.tar.gz && tar xzf redis-4.0.0.tar.gz && cd redis-4.0.0 && make && make install && cp redis.conf /etc/redis.conf`
 8. 创建目录
-- `mkdir -p /root/push/code/server && mkdir -p /root/push/db/redis && mkdir -p /root/push/code/web && mkdir -p /home/web/push-admin && chown -R nginx:nginx /home/web/push-admin`
+- `mkdir -p /mnt/data/code/server && mkdir -p /mnt/data/db/redis && mkdir -p /mnt/data/code/web && mkdir -p /mnt/data/nginx_web/push-admin `
 9. 下载服务器端源码
-- `cd /root/push/code && wget https://github.com/liutian/push/archive/master.zip && unzip master.zip -d server && rm master.zip`
+- `cd /mnt/data/code && wget https://github.com/liutian/push/archive/master.zip && unzip master.zip -d server && rm master.zip`
 10. 安装服务器端依赖
-- `cd /root/push/code/server/push-master && npm install `
+- `cd /mnt/data/code/server/push-master && npm install `
 11. 下载web端源码
-- `cd /root/push/code && wget https://github.com/liutian/push-admin/archive/master.zip && unzip master.zip -d web && rm master.zip`
+- `cd /mnt/data/code && wget https://github.com/liutian/push-admin/archive/master.zip && unzip master.zip -d web && rm master.zip`
 12. 安装web端依赖并执行构建任务,将src/environment目录下文件中 api 字段ip地址改为自己服务器的ip地址,如果是本地允许docker镜像则不需要修改ip，默认为127.0.0.1
-- `cd /root/push/code/web/push-admin-master && npm install && npm run build && rm -rf /home/web/push-admin/*.* && cp -R dist/* /home/web/push-admin && chown -R nginx:nginx /home/web/push-admin`
+- `cd /mnt/data/code/web/push-admin-master && npm install && npm run build && rm -rf /mnt/data/nginx_web/push-admin/*.* && cp -R dist/* /mnt/data/nginx_web/push-admin `
 13. 编写启动服务的脚本
 ```
 #!/bin/sh
 /usr/sbin/nginx -c /etc/nginx/nginx.conf
 /usr/local/bin/redis-server /etc/redis.conf
-cd /root/push/code/server/push-master
+cd /mnt/data/code/server/push-master
 /usr/bin/pm2 start app.json
 /bin/bash
 ```
@@ -67,12 +67,12 @@ cd /root/push/code/server/push-master
 15. 导入镜像
 - `sudo cat push.tar | sudo docker import - liuss/push`
 16. 上传镜像到docker hub(需要先执行登录)
-- `docker tag liuss/push liuss/push`
 - `docker push liuss/push`
 
 
 ### 基于推送服务器镜像创建容器
-- `sudo docker run -id -p 80:80 --name push-demo liuss/push /root/push/start.sh`
-
+- `sudo docker run -id -p 80:80 --name push-demo liuss/push /mnt/data/start.sh`
+- 从宿主机拷贝文件到容器 `sudo docker cp ./dist demo:/mnt/data`
+- 从容器拷贝文件到宿主机 `sudo docker cp demo:/mnt/data/dist ./`
 
 
