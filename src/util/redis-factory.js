@@ -44,7 +44,7 @@ function create() {
     logger.error('redis connection fail ' + e);
   });
   connection.on('connect', function () {
-    logger.warn('redis connection ready');
+    logger.log('redis connection ready');
   });
   _connectionList.push(connection);
   return connection;

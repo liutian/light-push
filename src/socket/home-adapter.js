@@ -441,7 +441,7 @@ Adapter.prototype.unionSid = function (rooms, except) {
 
 Adapter.prototype.broadcast = async function (packet, opts) {
   let rooms = opts.rooms || [];
-  let except = opts.except || [];
+  let except = Array.isArray(opts.except) ? opts.except : (opts.except ? [opts.except] : []);
   let flags = opts.flags || {};
   let self = this;
   let socket;

@@ -187,9 +187,9 @@ function joinOrleaveRoomFn(socket, rooms, isAdd, callback) {
     socket[method](config.room_prefix + room, next);
   }, function (err) {
     if (err) {
-      callback({ status: 500, msg: 'joinOrleaveRoom error: ' + err.toString() });
+      callback && callback({ status: 500, msg: 'joinOrleaveRoom error: ' + err.toString() });
     } else {
-      callback({ status: 200, msg: 'ok' });
+      callback && callback({ status: 200, msg: 'ok' });
     }
   });
 }
