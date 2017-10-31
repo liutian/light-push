@@ -42,34 +42,23 @@ default: &default
   redis_total_ios_room_client_set_prefix: total_ios_room_client_set_               #保存单个房间下所有ios客户端集合(包括普通房间和用户类型的房间)
   redis_total_android_room_client_set_prefix: total_android_room_client_set_       #保存单个房间下所有android客户端集合(包括普通房间和用户类型的房间)
   redis_android_room_client_set_prefix: android_room_client_set_                   #保存单个房间下在线的android客户端集合(包括普通房间和用户类型的房间)
-#  redis_post_message_android_set_prefix: push_msg_android_set_                     #保存需要对推送消息进行后续处理的android设备列表
-#  redis_post_message_ios_set_prefix: push_msg_ios_set_                             #保存需要对推送消息进行后续处理的ios设备列表
 
-  redis_room_transfer_channel: room_transfer
-  redis_home_broadcast_channel: home_broadcast
+  redis_room_transfer_channel: room_transfer                                       #客户端被动进入或者离开房间时会触发redis的订阅频道   
+  redis_home_broadcast_channel: home_broadcast                                     #发送消息时触发redis的订阅频道
 
-  room_activity_broadcast: true
-  worker_message_timeout: 5000
-#  ack_enable: true
-  client_push: true
-#  client_report_online: true
-#  client_report_push: true
-#  client_transfer: true
+  room_activity_broadcast: true                                                    #进入或者离开房间时是否需要向房间广播该变动
+  worker_message_timeout: 5000                                                     #消息发送之后延迟多长时间进行离线推送(android|ios)
 
-  push_message_h_expire: 120000000                                         #以秒为单位
-  push_message_list_max_limit: 5000000
-  user_room_prefix: user_                                                  #用户类型的房间名前缀
-  room_prefix: room_                                                       #房间名前缀
-  report_online_list_max_limit: 1000
-  report_push_ack_detail_max_limit: 1000
-  android_unread_message_list_max_limit: 100                               #每一个android设备可以保存未读消息总数
+  push_message_h_expire: 8640000                                                   #每条消息的保存时间，以秒为单位，100天
+  push_message_list_max_limit: 5000                                                #每个命名空间可以查看到的分页消息总数(只是用于调试或者简单查看历史推送记录)
+  user_room_prefix: user_                                                          #用户类型的房间名前缀
+  room_prefix: room_                                                               #房间名前缀
+  report_online_list_max_limit: 1000                                               #统计在线信息时如果查看详情可以返回的最大信息数(房间名，userid，uuid)
+  report_push_ack_detail_max_limit: 1000                                           #统计推送结果时可以返回的ack客户端总数
+  android_unread_message_list_max_limit: 100                                       #每一个android设备可以保存未读消息总数
 
-  log_watch_change: false  #是否启动实时日志刷新
+  emit_msg_pick_key: true                                                          #在线推送的消息是否过滤不必要的字段
 
-  emit_msg_pick_key: true  #在线推送到消息中是否过滤不必要的字段
-
-  apns_dev_server: 'https://api.development.push.apple.com:443'
-  apns_production_server: 'https://api.push.apple.com:443'
   apns_aps_alert: '通知'
   apns_payload_size: 4000
 
@@ -83,5 +72,3 @@ dev:
 
   transports:
     - websocket
-
-  client_transfer: false
