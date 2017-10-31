@@ -16,13 +16,13 @@ $ pm2 start app.json
 ###架构概述
 - 客户端通过socket.io协议访问服务器并建立持久连接(长链接或者websocket),服务器会通过几个纬度(命名空间,房间,用户)对客户端进行分类管理
 - 服务器还可以和第三方服务器进行相互的接口调用
-- 服务器分为连接服务器(connector-1)，接口服务器(logic-1)，延迟消息处理服务器(worker-message-1,worker-message-2),
+- 服务器分为连接服务器(connector-x)，接口服务器(logic-x)，延迟消息处理服务器(worker-message-x),
 连接服务器用来实时处理消息,接口服务器用来提供restful接口供第三方服务器调用，延迟消息服务器用来处理消息离线保存和apns推送，端口配置请查看 `app.json`
 - 系统通过redis保存所有数据包括客户端信息,消息等
 
 
 ###环境搭建
-- nodejs `curl --silent --location https://rpm.nodesource.com/setup_6.x | sudo bash -`  `sudo yum install -y nodejs` (需要超级管理员权限) 然后看输出说明  [详情](https://nodejs.org/en/download/package-manager/#freebsd-and-openbsd)
+- nodejs `curl --silent --location https://rpm.nodesource.com/setup_8.x | sudo bash -`  `sudo yum install -y nodejs` (需要超级管理员权限) 然后看输出说明  [详情](https://nodejs.org/en/download/package-manager/#freebsd-and-openbsd)
 - pm2 `npm install -g pm2`  如果安装中报错或者长时间没有响应 尝试通过镜像安装 例如： `npm install -g pm2 --registry=https://registry.npm.taobao.org`
 - redis 3.0 以上版本 [官网详情](http://redis.io/download) [安装步骤](http://blog.csdn.net/zhenzhendeblog/article/details/52161515)
  `src/config.yaml` 中的 `redis_address` 用来配置redis服务器地址 ， 如果redis是集群模式，则将该配置改为数组类型
@@ -375,8 +375,8 @@ openssl pkcs12 -in key.p12 -nocerts -out key.pem -nodes
 - [安装redis](https://redis.io/download) 版本 4.0.0 以上
 
 ### 通过docker快速构建整个推送服务
-- `docker run -id -p 80:80 --name push-demo liuss/push /root/push/start.sh`
-- 访问管理页面: `http://127.0.0.1/push-admin` 登录名 liuss 密码 123456
+- `docker run -id -p 80:80 443:443 --name push-demo liuss/push /root/push/start.sh`
+- 访问管理页面: `http://127.0.0.1/push-admin` 登录名 liuss 密码 123456  勾选管理员登陆
 
 ### 如何避免因网络不稳定造成的影响
 - 每次发送消息后延迟5s之清除旧的定时器创建新的定时器，保证只有一个最新的定时器)，验证发送的消息是否被对方接收，
