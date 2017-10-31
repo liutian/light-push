@@ -1,20 +1,24 @@
 {
-  "appenders": [
-    {
+  "appenders": {
+    "file": {
       "type": "file",
       "filename": "log/debug.log",
       "maxLogSize": 1048576,
       "backups": 1
     },
-    {
+    "dateFile": {
       "type": "dateFile",
       "filename": "log/out.log",
       "pattern": "-dd--hh.log"
     }
-  ],
-  "levels": {
-    "[all]": "warn",
-    "console": "warn"
   },
-  "replaceConsole": false
+  "categories": {
+    "default": {
+      "appenders": [
+        "file",
+        "dateFile"
+      ],
+      "level": "warn"
+    }
+  }
 }

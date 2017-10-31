@@ -19,7 +19,7 @@
     "koa": "2.3.0",
     "koa-body": "2.5.0",
     "koa-router": "7.2.1",
-    "log4js": "1.1.1",
+    "log4js": "2.3.10",
     "node-uuid": "1.4.8",
     "request": "2.83.0",
     "socket.io": "2.0.3",
