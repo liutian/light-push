@@ -12,14 +12,16 @@
   <script src="http://127.0.0.1:21314/socket.io/socket.io.js"></script>
   <script>
     try {
-      var uuid = window.parseInt(Math.random() * 1000000);
-      var uuid = Math.random() * 10000;
-      var socket = io.connect('http://127.0.0.1:21314/demo?uuid=' + uuid);
+      // var uuid = window.parseInt(Math.random() * 1000000);
+      // var uuid = Math.random() * 10000;
+      var uuid = 'uuid333';
+      var userid = 'user11';
+      var socket = io.connect('http://127.0.0.1:21314/demo?uuid=' + uuid + '&userid=' + userid);
     } catch (e) {
       alert('error:' + e);
     }
     socket.on('connect', function () {
-      var rooms = ['5936731676bf9006cebbfc00'];
+      var rooms = ['room555'];
 
       socket.emit('joinRoom', rooms, function (result) {
         console.log('joinRoom:' + JSON.stringify(result));

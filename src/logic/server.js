@@ -30,8 +30,9 @@ module.exports = function (router) {
   router.post('/api/auth/login', login);
 
   router.post('/api/auth/room-leave-message', roomLeaveMessage);
-  router.post('/api/admin/namespace/clear-dirty-client', nspClearDirtyClient);
+  router.post('/api/admin/namespace/clear-realtime-data', clearRealtimeData);
   router.post('/api/auth/namespace/save', nspUpdate);
+  router.post('/api/admin/clear-legacy-client', clearLegacyClient);
 }
 
 
@@ -84,7 +85,7 @@ async function nspGet(ctx, next) {
 }
 
 async function nspDel(ctx, next) {
-  await namespaceService.del(ctx.params.key);
+  await namespaceService.del(ctx.params.key, ctx.query.flushAll);
   ctx.body = {};
 }
 
@@ -112,7 +113,7 @@ async function roomLeaveMessage(ctx, next) {
 }
 
 
-async function nspClearDirtyClient(ctx, next) {
-  await namespaceService.clearDirtyClient(ctx.request.body.namespace);
+async function clearRealtimeData(ctx, next) {
+  await namespaceService.clearRealtimeData(ctx.request.body.namespace);
   ctx.body = {};
 }

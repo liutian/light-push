@@ -19,8 +19,11 @@ default: &default
 #    - 127.0.0.1:10020
   redis_prefix: ipush_
   redis_push_msg_id_prefix: p_msg_id_                                    #消息id的前缀
+  redis_total_client_set_prefix: total_client_set_                       #保存每个命名空间下历史客户端集合
+  redis_total_client_sort_set_prefix: total_client_sort_set_             #保持每个命名空间下历史客户端以最后登陆时间距1970元年的天数为分数排列
   redis_client_set_prefix: client_set_                                   #保存每个命名空间下的客户端集合
   redis_user_set_prefix: user_set_                                       #保存每个命名空间下的用户集合
+  redis_total_all_room_set_prefix: total_all_room_set_                   #保存每个命名空间下历史房间集合(包括普通房间和用户类型的房间)        
   redis_room_set_prefix: room_set_                                       #保存每个命名空间下的房间集合(只保存普通房间,不包括用户类型的房间)
   redis_user_room_set_prefix: user_room_set_                             #保存单个用户下的房间集合
   redis_room_user_set_prefix: room_user_set_                             #保存单个房间下的用户集合
@@ -29,7 +32,8 @@ default: &default
   redis_push_ack_set_prefix: push_ack_set_                               #保存推送确认报告的设备ID集合
   redis_push_msg_uuid: push_msg_uuid_int                                 #保存消息自增id
   redis_client_hash_prefix: client_hash_                                 #保存单个客户端的信息
-  redis_android_unread_message_list: android_unread_message_list_        #保存每一个android设备未读的消息列表,
+  redis_android_unread_message_list: android_unread_message_list_        #保存每一个android设备未读的消息列表
+  redis_total_client_all_room_set_prefix: total_client_all_room_set_     #保存客户端曾经进入过的房间集合(包括用户房间)
 
   redis_namespace_key_z: nsp_z_                                          #保存命名空间的列表
   #命名空间下配置项: key,name,apns_topic,apns_host,apns_port,apns_expiration,connect_callback,disconnect_callback,auth_passwd,callback_auth
@@ -40,8 +44,8 @@ default: &default
   redis_total_room_client_set_prefix: total_room_client_set_                       #保存单个房间下所有客户端集合(包括普通房间和用户类型的房间)
   redis_ios_room_client_set_prefix: ios_room_client_set_                           #保存单个房间下在线的ios客户端集合(包括普通房间和用户类型的房间)
   redis_total_ios_room_client_set_prefix: total_ios_room_client_set_               #保存单个房间下所有ios客户端集合(包括普通房间和用户类型的房间)
-  redis_total_android_room_client_set_prefix: total_android_room_client_set_       #保存单个房间下所有android客户端集合(包括普通房间和用户类型的房间)
   redis_android_room_client_set_prefix: android_room_client_set_                   #保存单个房间下在线的android客户端集合(包括普通房间和用户类型的房间)
+  redis_total_android_room_client_set_prefix: total_android_room_client_set_       #保存单个房间下所有android客户端集合(包括普通房间和用户类型的房间)
 
   redis_room_transfer_channel: room_transfer                                       #客户端被动进入或者离开房间时会触发redis的订阅频道   
   redis_home_broadcast_channel: home_broadcast                                     #发送消息时触发redis的订阅频道
@@ -52,10 +56,12 @@ default: &default
   push_message_h_expire: 8640000                                                   #每条消息的保存时间，以秒为单位，100天
   push_message_list_max_limit: 5000                                                #每个命名空间可以查看到的分页消息总数(只是用于调试或者简单查看历史推送记录)
   user_room_prefix: user_                                                          #用户类型的房间名前缀
-  room_prefix: room_                                                               #房间名前缀
+  room_prefix: room_                                                               #房间名前缀,只是做验证防止非法用户名，保持到redis时已经去除，作用不大
   report_online_list_max_limit: 1000                                               #统计在线信息时如果查看详情可以返回的最大信息数(房间名，userid，uuid)
   report_push_ack_detail_max_limit: 1000                                           #统计推送结果时可以返回的ack客户端总数
   android_unread_message_list_max_limit: 100                                       #每一个android设备可以保存未读消息总数
+  client_legacy_expire: 60                                                         #客户端在最后一次上线之后多长时间会被服务器清除数据，单位天
+
 
   emit_msg_pick_key: true                                                          #在线推送的消息是否过滤不必要的字段
 

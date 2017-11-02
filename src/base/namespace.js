@@ -20,6 +20,7 @@ const ROOM_CLIENT_SET_PREFIX = config.redis_room_client_set_prefix;//保存单�
 const USER_ROOM_SET_PREFIX = config.redis_user_room_set_prefix;
 const IOS_ROOM_CLIENT_SET_PREFIX = config.redis_ios_room_client_set_prefix;
 const ANDROID_ROOM_CLIENT_SET_PREFIX = config.redis_android_room_client_set_prefix;
+const USER_ROOM_PREFIX_REG = new RegExp('^' + config.user_room_prefix, 'i');//判断是否是用户类型的房间
 
 const nspKeys = 'key name connect_callback disconnect_callback auth_passwd apns_list update_date client_ip callback_auth offline';
 const nspKList = nspKeys.split(/\s+/);
@@ -57,26 +58,28 @@ module.exports = {
   data: nspObj,
   addOfflineListener: addOfflineListenerFn,
   addApnsChangeListener: addApnsChangeListenerFn,
-  clearDirtyClient: clearDirtyClientFn
+  clearRealtimeData: clearRealtimeDataFn,
+  clearLegacyClient: clearLegacyClientFn,
 }
 
 
 
 //*******************************************************************
 
-async function clearDirtyClientFn(nspName) {
-  if (!nspName) return;
+async function clearRealtimeDataFn(nspName) {
+  if (!nspName) apiError.throw('can not find key');
+  if (nspName.indexOf('/') != 0) nspName = '/' + nspName;
 
-  let roomList = await _redis.smembers(ROOM_SET_PREFIX + nspName);
-  let clientList = await _redis.smembers(CLIENT_SET_PREFIX + nspName);
-  let userList = await _redis.smembers(USER_SET_PREFIX + nspName);
-
+  let offline = await _redis.hmget(config.redis_namespace_set_prefix + nspName, 'offline');
+  if (offline !== 'off') apiError.throw('namespace must be set offline off');
 
   let redisMulti = redis_db.multi();
-  let disconnectTime = Date.now();
+
+  let clientList = await _redis.smembers(CLIENT_SET_PREFIX + nspName);
   clientList.forEach(clientId => {
-    redisMulti = redisMulti.del(config.redis_client_hash_prefix + clientId, {
-      last_disconnect_time: disconnectTime
+    redisMulti = redisMulti.hmset(config.redis_client_hash_prefix + clientId, {
+      last_disconnect_time: Date.now(),
+      disconnect_reason: 'clear'
     });
   });
   redisMulti = redisMulti.del(CLIENT_SET_PREFIX + nspName);
@@ -85,9 +88,12 @@ async function clearDirtyClientFn(nspName) {
     await redisMulti.exec();
   } catch (e) {
     logger.error('clear dirty client 1' + e);
+  } finally {
+    clientList = undefined;
+    redisMulti = undefined;
   }
 
-
+  let userList = await _redis.smembers(USER_SET_PREFIX + nspName);
   redisMulti = redis_db.multi();
   userList.forEach(userName => {
     redisMulti = redisMulti.del(USER_ROOM_SET_PREFIX + nspName + '_' + userName);
@@ -97,10 +103,13 @@ async function clearDirtyClientFn(nspName) {
   try {
     await redisMulti.exec();
   } catch (e) {
-    logger.error('clear dirty client 2' + e);
+    logger.error('clear dirty user 2' + e);
+  } finally {
+    userList = undefined;
+    redisMulti = undefined;
   }
 
-
+  let roomList = await _redis.smembers(ROOM_SET_PREFIX + nspName);
   redisMulti = redis_db.multi();
   roomList.forEach(room => {
     let nspAndRoom = nspName + '_' + room;
@@ -114,10 +123,95 @@ async function clearDirtyClientFn(nspName) {
   try {
     await redisMulti.exec();
   } catch (e) {
-    logger.error('clear dirty client 3' + e);
+    logger.error('clear dirty room 3' + e);
+  } finally {
+    roomList = undefined;
+    redisMulti = undefined;
   }
 
+}
 
+async function clearLegacyClientFn(nspName) {
+  if (!nspName) apiError.throw('can not find key');
+  if (nspName.indexOf('/') != 0) nspName = '/' + nspName;
+
+  let offline = await _redis.hmget(config.redis_namespace_set_prefix + nspName, 'offline');
+  if (offline !== 'off') apiError.throw('namespace must be set offline off');
+
+
+  let legacy = Math.floor((Date.now() - config.client_legacy_expire * 3600 * 24 * 1000) / 3600 * 24 * 1000);
+  let clientIdList = await _redis.zrangebyscore(config.redis_total_client_sort_set_prefix + nspName, '-inf', legacy);
+  let redisMulti;
+
+  for (let i = 0; i < clientIdList.length; i++) {
+    let clientId = clientIdList[i];
+    redisMulti = redis_db.multi();
+
+    redisMulti = redisMulti.srem(config.redis_total_client_set_prefix + nspName, clientId);
+    redisMulti = redisMulti.srem(CLIENT_SET_PREFIX + nspName, clientId);
+    redisMulti = redisMulti.del(config.redis_client_hash_prefix + clientId);
+    redisMulti = redisMulti.del(config.redis_android_unread_message_list + clientId);
+
+    let roomList = await _redis.smembers(config.redis_total_client_all_room_set_prefix + clientId);
+    for (let j = 0; j < roomList.length; j++) {
+      let room = roomList[j];
+      let nspAndRoom = nspName + '_' + room;
+      redisMulti = redisMulti.srem(config.redis_total_room_client_set_prefix + '{' + nspAndRoom + '}', clientId);
+      redisMulti = redisMulti.srem(config.redis_room_client_set_prefix + '{' + nspAndRoom + '}', clientId);
+      redisMulti = redisMulti.srem(config.redis_total_ios_room_client_set_prefix + '{' + nspAndRoom + '}', clientId);
+      redisMulti = redisMulti.srem(config.redis_ios_room_client_set_prefix + '{' + nspAndRoom + '}', clientId);
+      redisMulti = redisMulti.srem(config.redis_total_android_room_client_set_prefix + '{' + nspAndRoom + '}', clientId);
+      redisMulti = redisMulti.srem(config.redis_android_room_client_set_prefix + '{' + nspAndRoom + '}', clientId);
+    }
+    redisMulti = redisMulti.del(config.redis_total_client_all_room_set_prefix + clientId);
+
+    try {
+      await redisMulti.exec();
+    } catch (e) {
+      logger.error(`del legacy client:${clientId}  1` + e);
+    } finally {
+      redisMulti = undefined;
+    }
+
+    redisMulti = redis_db.multi();
+    for (let j = 0; j < roomList.length; j++) {
+      let room = roomList[j];
+      let nspAndRoom = nspName + '_' + room;
+      let isUserRoom = USER_ROOM_PREFIX_REG.test(room);
+
+      let clientCount = await _redis.scard(config.redis_total_room_client_set_prefix + '{' + nspAndRoom + '}');
+      if (clientCount > 0) continue;
+
+      redisMulti = redisMulti.srem(config.redis_total_all_room_set_prefix + nspName, room);
+      if (isUserRoom) {
+        let userName = room.replace(USER_ROOM_PREFIX_REG, '');
+        redisMulti = redisMulti.srem(config.redis_user_set_prefix + nspName, userName);
+        let userRoomList = await _redis.smembers(config.redis_user_room_set_prefix + nspName + '_' + userName);
+
+        for (let h = 0; h < userRoomList.length; h++) {
+          let userRoom = userRoomList[h];
+          redisMulti = redisMulti.srem(config.redis_room_user_set_prefix + nspName + '_' + userRoom);
+        }
+        redisMulti = redisMulti.del(config.redis_user_room_set_prefix + nspName + '_' + userName);
+      } else {
+        redisMulti = redisMulti.del(config.redis_room_set_prefix + nspName, room);
+      }
+
+      try {
+        await redisMulti.exec();
+      } catch (e) {
+        logger.error(`del legacy client:${clientId} 2` + e);
+      } finally {
+        redisMulti = undefined;
+      }
+
+    }
+  }
+
+  await _redis.zremrangebyscore(config.redis_total_client_sort_set_prefix + nspName, '-inf', legacy);
+
+
+  return clientIdList;
 }
 
 async function init() {
@@ -157,13 +251,77 @@ async function listFn() {
   return nspList;
 }
 
-async function delFn(key) {
+async function delFn(key, flushAll) {
   if (!key) apiError.throw('can not find key');
   if (key.indexOf('/') != 0) key = '/' + key;
-  await _redis.zrem(config.redis_namespace_key_z, key);
-  await _redis.del(config.redis_namespace_set_prefix + key);
-  delete nspObj[key];
-  _redis_pub.publish(nspDelChannel, key);
+
+  let offline = await _redis.hmget(config.redis_namespace_set_prefix + key, 'offline');
+  if (offline !== 'off') apiError.throw('namespace must be set offline off');
+
+  await clearRealtimeDataFn(key);
+
+  let roomList = await _redis.smembers(config.redis_total_all_room_set_prefix + key);
+  let redisMulti = redis_db.multi();
+  roomList.forEach(room => {
+    let nspAndRoom = key + '_' + room;
+    redisMulti = redisMulti.del(config.redis_total_room_client_set_prefix + '{' + nspAndRoom + '}');
+    redisMulti = redisMulti.del(config.redis_total_ios_room_client_set_prefix + '{' + nspAndRoom + '}');
+    redisMulti = redisMulti.del(config.redis_total_android_room_client_set_prefix + '{' + nspAndRoom + '}');
+  });
+  redisMulti = redisMulti.del(config.redis_total_all_room_set_prefix + key);
+
+  try {
+    await redisMulti.exec();
+  } catch (e) {
+    logger.error('del namespace room 1' + e);
+  } finally {
+    roomList = undefined;
+    redisMulti = undefined;
+  }
+
+  let clientIdList = await _redis.smembers(config.redis_total_client_set_prefix + key);
+  clientIdList.forEach(clientId => {
+    redisMulti = redisMulti.del(config.redis_client_hash_prefix + clientId);
+    redisMulti = redisMulti.del(config.redis_android_unread_message_list + clientId);
+    redisMulti = redisMulti.del(config.redis_total_client_all_room_set_prefix + clientId);
+  });
+  redisMulti = redisMulti.del(config.redis_total_client_set_prefix + key);
+
+  try {
+    await redisMulti.exec();
+  } catch (e) {
+    logger.error('del namespace client 2' + e);
+  } finally {
+    clientIdList = undefined;
+    redisMulti = undefined;
+  }
+
+  // 每条消息的确认回执列表和部分消息需要等超时时间之后自动移除
+  let messageCount = await _redis.llen(config.redis_push_message_list_prefix + key);
+  let messageIdList = await _redis.lrange(config.redis_push_message_list_prefix + key, 0, messageCount);
+  messageIdList.forEach(messageId => {
+    redisMulti = redisMulti.del(config.redis_push_msg_id_prefix + messageId);
+  });
+  redisMulti = redisMulti.del(config.redis_push_message_list_prefix + key);
+
+  try {
+    await redisMulti.exec();
+  } catch (e) {
+    logger.error('del namespace message 3' + e);
+  } finally {
+    messageIdList = undefined;
+    redisMulti = undefined;
+  }
+
+  await _redis.del(config.redis_total_client_sort_set_prefix + key);
+  if (flushAll === 'true') {
+    await _redis.zrem(config.redis_namespace_key_z, key);
+    await _redis.del(config.redis_namespace_set_prefix + key);
+
+    delete nspObj[key];
+    _redis_pub.publish(nspDelChannel, key);
+  }
+
 }
 
 

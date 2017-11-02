@@ -47,7 +47,6 @@ function transferFn(data) {
       }
     }
 
-
     try {
       socket[type](roomName);
     } catch (e) {

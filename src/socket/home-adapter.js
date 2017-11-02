@@ -13,7 +13,10 @@ const apiError = require('../util/api-error');
 const logger = log4js.getLogger('home-adapter');
 
 const CLIENT_SET_PREFIX = config.redis_client_set_prefix;
+const TOTAL_CLIENT_SET_PREFIX = config.redis_total_client_set_prefix;
 const USER_SET_PREFIX = config.redis_user_set_prefix;
+const TOTAL_ALL_ROOM_SET_PREFIX = config.redis_total_all_room_set_prefix;
+const TOTAL_CLIENT_ALL_ROOM_SET_PREFIX = config.redis_total_client_all_room_set_prefix;
 const ROOM_SET_PREFIX = config.redis_room_set_prefix;
 const USER_ROOM_SET_PREFIX = config.redis_user_room_set_prefix;
 const ROOM_USER_SET_PREFIX = config.redis_room_user_set_prefix;
@@ -153,6 +156,7 @@ async function add(self, socket, room) {
     mapId = new Map();
     self.sids.set(socket.id, mapId);
     await redis_db.sadd(CLIENT_SET_PREFIX + nspName, socket.id);
+    await redis_db.sadd(TOTAL_CLIENT_SET_PREFIX + nspName, socket.id);
   }
 
   //单个房间下有多少个客户端
@@ -165,6 +169,8 @@ async function add(self, socket, room) {
     } else {
       await redis_db.sadd(ROOM_SET_PREFIX + nspName, room);
     }
+    await redis_db.sadd(TOTAL_ALL_ROOM_SET_PREFIX + nspName, room);
+    await redis_db.sadd(TOTAL_CLIENT_ALL_ROOM_SET_PREFIX + socket.id, room);
   }
 
   let redisMulti = redis_db.multi();
@@ -292,7 +298,7 @@ async function del(self, socket, room) {
 
 
 Adapter.prototype.delAll = async function (socket, fn) {
-  if (socket.nsp.name == '/') {
+  if (socket.nsp.name == '/' || !namespace.data[socket.nsp.name]) {
     fn && fn();
     return;
   }
@@ -347,7 +353,8 @@ async function delAll(self, socket) {
 
   await redis_db.srem(CLIENT_SET_PREFIX + nspName, socket.id);
   await redis_db.hmset(config.redis_client_hash_prefix + socket.id, {
-    last_disconnect_time: (new Date()).getTime()
+    last_disconnect_time: Date.now(),
+    disconnect_reason: 'network'
   });
 
   //删除连接

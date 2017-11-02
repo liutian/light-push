@@ -196,10 +196,11 @@ function joinOrleaveRoomFn(socket, rooms, isAdd, callback) {
 
 /* 更新用户和设备信息 */
 async function updateClientInfo(socket) {
+  let day = Math.floor(Date.now() / (3600 * 24 * 1000));
   let client_hash_id = config.redis_client_hash_prefix + socket.id;
   let client = {
     userid: socket.handshake.userid,
-    last_connect_time: (new Date()).getTime()
+    last_connect_time: Date.now()
   };
 
   let isExists = await _redis.exists(client_hash_id);
@@ -208,6 +209,7 @@ async function updateClientInfo(socket) {
   }
 
   await _redis.hmset(client_hash_id, client);
+  await _redis.zadd(config.redis_total_client_sort_set_prefix + socket.nsp.name, day, client_hash_id);
 }
 
 
