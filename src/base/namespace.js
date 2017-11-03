@@ -29,6 +29,8 @@ const nspObj = {};
 const apnsChangeListeners = [];
 const offlineListeners = [];
 
+const key_reg = new RegExp(config.key_reg);
+
 const redis_db = redisFactory.getInstance(true);
 
 _redis_sub.subscribe(nspDelChannel, function (err) {
@@ -327,7 +329,13 @@ async function delFn(key, flushAll) {
 
 async function saveFn(nsp) {
   if (!nsp || !nsp.key) apiError.throw('key is null');
+  if (nsp.key.length > 20 || !key_reg.test(nsp.key)) apiError.throw('namespace invalid');
   nsp = _util.pick(nsp, nspKeys);
+
+  let isExists = await _redis.exists(config.redis_namespace_set_prefix + nsp.key);
+  if (!isExists) {
+    await _redis.zadd(config.redis_namespace_key_z, 0, nsp.key);
+  }
 
   let apns_list;
   if (Array.isArray(nsp.apns_list) && nsp.apns_list.length > 0) {
@@ -367,11 +375,6 @@ async function saveFn(nsp) {
   }
 
   nsp.update_date = Date.now();
-  let isExists = await _redis.exists(config.redis_namespace_set_prefix + nsp.key);
-  if (!isExists) {
-    await _redis.zadd(config.redis_namespace_key_z, 0, nsp.key);
-  }
-
   await _redis.hmset(config.redis_namespace_set_prefix + nsp.key, nsp);
 
   nsp.apns_list = apns_list;

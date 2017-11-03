@@ -117,3 +117,7 @@ async function clearRealtimeData(ctx, next) {
   await namespaceService.clearRealtimeData(ctx.request.body.namespace);
   ctx.body = {};
 }
+
+async function clearLegacyClient(ctx, next) {
+  ctx.body = await namespaceService.clearLegacyClient(ctx.request.body.namespace);
+}

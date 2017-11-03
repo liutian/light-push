@@ -17,35 +17,51 @@ default: &default
   redis_password: 
 #    - 127.0.0.1:10010
 #    - 127.0.0.1:10020
-  redis_prefix: ipush_
-  redis_push_msg_id_prefix: p_msg_id_                                    #消息id的前缀
-  redis_total_client_set_prefix: total_client_set_                       #保存每个命名空间下历史客户端集合
-  redis_total_client_sort_set_prefix: total_client_sort_set_             #保持每个命名空间下历史客户端以最后登陆时间距1970元年的天数为分数排列
-  redis_client_set_prefix: client_set_                                   #保存每个命名空间下的客户端集合
-  redis_user_set_prefix: user_set_                                       #保存每个命名空间下的用户集合
-  redis_total_all_room_set_prefix: total_all_room_set_                   #保存每个命名空间下历史房间集合(包括普通房间和用户类型的房间)        
-  redis_room_set_prefix: room_set_                                       #保存每个命名空间下的房间集合(只保存普通房间,不包括用户类型的房间)
-  redis_user_room_set_prefix: user_room_set_                             #保存单个用户下的房间集合
-  redis_room_user_set_prefix: room_user_set_                             #保存单个房间下的用户集合
-  redis_push_message_list_prefix: push_message_list_                     #保存每个命名空间下推送消息的id数组(根据push_message_list_max_limit保存有限的id)
-  redis_push_message_temp_list_prefix: push_message_temp_list_           #临时保存所有命名空间下推送的消息id列表,post_worker会通过redis的消息队列把对于的消息取出来进行处理
-  redis_push_ack_set_prefix: push_ack_set_                               #保存推送确认报告的设备ID集合
-  redis_push_msg_uuid: push_msg_uuid_int                                 #保存消息自增id
-  redis_client_hash_prefix: client_hash_                                 #保存单个客户端的信息
-  redis_android_unread_message_list: android_unread_message_list_        #保存每一个android设备未读的消息列表
-  redis_total_client_all_room_set_prefix: total_client_all_room_set_     #保存客户端曾经进入过的房间集合(包括用户房间)
+  redis_prefix: p_
+  redis_push_msg_id_prefix: msg_h_                                       #消息id的前缀
+  redis_total_client_set_prefix: t_c_s_                                  #保存每个命名空间下历史客户端集合
+  redis_total_client_sort_set_prefix: t_c_z_                        #保持每个命名空间下历史客户端以最后登陆时间距1970元年的天数为分数排列
+  redis_client_set_prefix: c_s_                                          #保存每个命名空间下的客户端集合
+  redis_user_set_prefix: u_s_                                            #保存每个命名空间下的用户集合
+  redis_total_all_room_set_prefix: t_all_r_s_                            #保存每个命名空间下历史房间集合(包括普通房间和用户类型的房间)        
+  redis_room_set_prefix: r_s_                                            #保存每个命名空间下的房间集合(只保存普通房间,不包括用户类型的房间)
+  redis_user_room_set_prefix: u_r_s_                                     #保存单个用户下的房间集合
+  redis_room_user_set_prefix: r_u_s_                                     #保存单个房间下的用户集合
+  redis_push_message_list_prefix: msg_l_                                 #保存每个命名空间下推送消息的id数组(根据push_message_list_max_limit保存有限的id)
+  redis_push_message_temp_list_prefix: msg_temp_l_                       #临时保存所有命名空间下推送的消息id列表,post_worker会通过redis的消息队列把对于的消息取出来进行处理
+  redis_push_ack_set_prefix: ack_s_                                      #保存推送确认报告的设备ID集合
+  redis_push_msg_uuid: msg_uuid_int                                      #保存消息自增id
+  redis_client_hash_prefix: c_h_                                         #保存单个客户端的信息
+  redis_android_unread_message_list: a_unread_msg_l_                     #保存每一个android设备未读的消息列表
+  redis_total_client_all_room_set_prefix: t_c_all_r_s_                   #保存客户端曾经进入过的房间集合(包括用户房间)
 
   redis_namespace_key_z: nsp_z_                                          #保存命名空间的列表
   #命名空间下配置项: key,name,apns_topic,apns_host,apns_port,apns_expiration,connect_callback,disconnect_callback,auth_passwd,callback_auth
-  redis_namespace_set_prefix: nsp_set_                                   #保存单个命名空间下的配置信息
+  redis_namespace_set_prefix: nsp_s_                                     #保存单个命名空间下的配置信息
 
 #这些键需要使用hash tag 保证集群环境下可以落到单一实例上,写代码的时候需要格外注意
-  redis_room_client_set_prefix: room_client_set_                                   #保存单个房间下在线的客户端集合(包括普通房间和用户类型的房间)
-  redis_total_room_client_set_prefix: total_room_client_set_                       #保存单个房间下所有客户端集合(包括普通房间和用户类型的房间)
-  redis_ios_room_client_set_prefix: ios_room_client_set_                           #保存单个房间下在线的ios客户端集合(包括普通房间和用户类型的房间)
-  redis_total_ios_room_client_set_prefix: total_ios_room_client_set_               #保存单个房间下所有ios客户端集合(包括普通房间和用户类型的房间)
-  redis_android_room_client_set_prefix: android_room_client_set_                   #保存单个房间下在线的android客户端集合(包括普通房间和用户类型的房间)
-  redis_total_android_room_client_set_prefix: total_android_room_client_set_       #保存单个房间下所有android客户端集合(包括普通房间和用户类型的房间)
+  redis_room_client_set_prefix: r_c_s_                                   #保存单个房间下在线的客户端集合(包括普通房间和用户类型的房间)
+  redis_total_room_client_set_prefix: t_r_c_s_                           #保存单个房间下所有客户端集合(包括普通房间和用户类型的房间)
+  redis_ios_room_client_set_prefix: i_r_c_s_                             #保存单个房间下在线的ios客户端集合(包括普通房间和用户类型的房间)
+  redis_total_ios_room_client_set_prefix: t_i_r_c_s_                     #保存单个房间下所有ios客户端集合(包括普通房间和用户类型的房间)
+  redis_android_room_client_set_prefix: a_r_c_s_                         #保存单个房间下在线的android客户端集合(包括普通房间和用户类型的房间)
+  redis_total_android_room_client_set_prefix: t_a_r_c_s_                 #保存单个房间下所有android客户端集合(包括普通房间和用户类型的房间)
+
+  key_reg: '^[\\\w.\\\d\-$#/]+$'                                                   #命名空间 房间  userid  uuid 正则
+  #缓存键名简写对应表
+  #p      push
+  #msg    message 
+  #t      total
+  #c      client 
+  #s      set
+  #u      user 
+  #r      room 
+  #l      list 
+  #h      hash 
+  #a      android 
+  #nsp    namespace
+  #z      sorted set
+
 
   redis_room_transfer_channel: room_transfer                                       #客户端被动进入或者离开房间时会触发redis的订阅频道   
   redis_home_broadcast_channel: home_broadcast                                     #发送消息时触发redis的订阅频道

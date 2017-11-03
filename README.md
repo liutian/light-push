@@ -316,13 +316,14 @@ socket.on('peopleLeave',function(data){
 
 > apns推送时，如果有 `token_key` 则以 token 方式做推送认证
 
-###删除指定的命名空间
+###删除指定的命名空间相关的数据
 第三方服务器
 ```
-/api/admin/namespace/del/:key GET
+/api/admin/namespace/del/:key?flushAll=true GET
 ```
 请求参数
 - `key` 命名空间
+- `flushAll` 是否删除命名空间本身数据
 
 ###命名空间列表
 第三方服务器
@@ -338,6 +339,27 @@ socket.on('peopleLeave',function(data){
 ```
 请求参数见获取命名空间信息接口
 > 参数 `key` 必填,如果服务器根据key查询不到命名空间信息则认为是新建操作否则为更新操作
+
+###清除命名空间相关的实时数据防止实时统计数据有误差
+第三方服务器
+```
+/api/admin/namespace/clear-realtime-data POST
+```
+请求参数见获取命名空间信息接口
+> 参数 `namespace` 必填,命名空间
+
+###清除长时间不登陆的客户端
+第三方服务器
+```
+/api/admin/clear-legacy-client POST
+```
+请求参数见获取命名空间信息接口
+> 参数 `namespace` 必填,命名空间
+
+返回结果为删除的客户端ID列表
+
+
+
 
 ###接口规范
 - 凡是提供给第三方服务器可以调用的接口都需要经HTTP Basic Auth校验

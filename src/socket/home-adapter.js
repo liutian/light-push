@@ -36,7 +36,7 @@ const broadcast_prefix = config.redis_home_broadcast_channel;
 const pub = redisFactory.getInstance();
 const sub = redisFactory.getInstance();
 const redis_db = redisFactory.getInstance(true);
-
+const key_reg = new RegExp(config.key_reg);
 
 module.exports = Adapter;
 
@@ -119,6 +119,10 @@ Adapter.prototype.addAll = async function (socket, rooms, fn) {
       return;
     }
     room = room.replace(ROOM_PREFIX_REG, '');
+    if (room.length > 20 || !key_reg.test(room)) {
+      fn && fn(new Error('room invalid'));
+      return;
+    }
     roomList.push(room);
   }
 

@@ -6,6 +6,8 @@ const config = require('../config');
 const namespace = require('../base/namespace');
 const logger = log4js.getLogger('handshake');
 
+const key_reg = new RegExp(config.key_reg);
+
 /**
  * 客户端连接服务器时url参数: uuid / [userid] / platform
  * @param socket
@@ -20,49 +22,70 @@ module.exports = function (socket, next) {
   let nspName = socket.nsp.name;
   let nspData = namespace.data[nspName];
 
-  if (nspName != '/' && !nspData) {
+  // 默认命名空间下的连接直接通过
+  if (nspName == '/') {
+    return next();
+  }
+
+  if (!nspData) {
     socket.disconnect();
     return next(new Error('this namespace not found'));
   }
 
-  if (nspData && nspData.offline == 'on') {
+  if (nspData.offline == 'on') {
     socket.disconnect();
     return next(new Error('this namespace offline'));
   }
 
-  //如果命名空间不是主命名空间,则uuid取同一个client下主命名空间socket的uuid,保证uuid以主命名空间下的socket为准
-  if (socket.nsp.name != '/') {
-    let indexSocket;
-    for (let skey of Object.keys(socket.client.sockets)) {
-      let s = socket.client.sockets[skey];
-      if (s.nsp.name == '/') {
-        indexSocket = s;
-        break;
-      }
-    }
-    if (indexSocket) {
-      uuid = indexSocket.handshake.query.uuid;
-      userid = indexSocket.handshake.query.userid;
-      platform = indexSocket.handshake.query.platform;
-    } else {
-      socket.disconnect();
-      return next(new Error('not found indexSocket'));
-    }
+  //uuid必填用来确定设备与服务器之间的连接
+  if (!uuid || uuid.length > 40 || !key_reg.test(uuid)) {
+    socket.disconnect();
+    return next(new Error('uuid invalid'));
   }
 
-  //uuid必填用来确定设备与服务器之间的连接
-  if (!uuid) {
+  if (userid && (userid.length > 40 || !key_reg.test(userid))) {
     socket.disconnect();
-    return next(new Error('uuid can not be empty'));
-  } else if (!userid) {
-    userid = uuid;
+    return next(new Error('userid invalid'));
   }
+
+  if (platform && (platform !== 'web' && platform !== 'android' && platform !== 'ios')) {
+    socket.disconnect();
+    return next(new Error('platform invalid'));
+  }
+
+
+  //如果命名空间不是主命名空间,则uuid取同一个client下主命名空间socket的uuid,保证uuid以主命名空间下的socket为准
+  let indexSocket;
+  for (let skey of Object.keys(socket.client.sockets)) {
+    let s = socket.client.sockets[skey];
+    if (s.nsp.name == '/') {
+      indexSocket = s;
+      break;
+    }
+  }
+  if (indexSocket) {
+    uuid = indexSocket.handshake.query.uuid;
+    userid = indexSocket.handshake.query.userid;
+    platform = indexSocket.handshake.query.platform;
+  } else {
+    socket.disconnect();
+    return next(new Error('not found indexSocket'));
+  }
+
+  if (!userid) {
+    socket.handshake.query.userid = uuid;
+  }
+  if (!platform) {
+    socket.handshake.query.platform = 'web';
+  }
+
   socket.handshake.uuid = uuid;
   socket.handshake.userid = userid;
   socket.handshake.platform = platform;
 
-  uuid = (platform ? platform : 'web') + '-' + uuid;
-  let newId = nspName + '#' + userid + '#' + uuid;
+
+
+  let newId = nspName + '#' + userid + '#' + platform + '-' + uuid;
   socket._id = socket.id;//保存旧的socket.id
   //新的socket.id,以namespace + userid + platform + uuid为基准产生新的id,可以实现同一终端多用户在线
   //新的id由外界提供,保证和服务器无关,防止服务器意外宕机而无法清除和id相关的redis数据
@@ -77,7 +100,7 @@ module.exports = function (socket, next) {
     // return next(new Error('socket.id conflict'));
   }
 
-  if (nspName == '/' || !nspData.connect_callback) {
+  if (!nspData.connect_callback) {
     return next();
   }
 

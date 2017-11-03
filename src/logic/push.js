@@ -16,7 +16,7 @@ const pushKList = 'namespace room except pushData apnsName leaveMessage';
 
 const _redis = redisFactory.getInstance(true);
 const homeBroadcastPub = redisFactory.getInstance();
-
+const key_reg = new RegExp(config.key_reg);
 
 exports.push = pushFn;
 
@@ -34,6 +34,8 @@ async function pushFn(data) {
     apiError.throw('namespace can not be empty');
   } else if (!data.room) {
     apiError.throw('room can not be empty');
+  } else if (data.room.length > 20 || !key_reg.test(data.room)) {
+    apiError.throw('room invalid')
   } else if (!data.pushData || typeof data.pushData != 'object') {
     apiError.throw('pushData can not be empty and must be an Object');
   } else if (data.except && typeof data.except != 'string') {
