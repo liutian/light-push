@@ -73,7 +73,7 @@ async function clearRealtimeDataFn(nspName) {
   if (nspName.indexOf('/') != 0) nspName = '/' + nspName;
 
   let offline = await _redis.hmget(config.redis_namespace_set_prefix + nspName, 'offline');
-  if (offline !== 'off') apiError.throw('namespace must be set offline off');
+  if (offline[0] !== 'on') apiError.throw('namespace must be set offline on');
 
   let redisMulti = redis_db.multi();
 
@@ -107,11 +107,12 @@ async function clearRealtimeDataFn(nspName) {
   } catch (e) {
     logger.error('clear dirty user 2' + e);
   } finally {
-    userList = undefined;
     redisMulti = undefined;
   }
 
   let roomList = await _redis.smembers(ROOM_SET_PREFIX + nspName);
+  roomList = roomList.concat(userList.map(u => { return config.user_room_prefix + u }));
+  userList = undefined;
   redisMulti = redis_db.multi();
   roomList.forEach(room => {
     let nspAndRoom = nspName + '_' + room;
@@ -138,7 +139,7 @@ async function clearLegacyClientFn(nspName) {
   if (nspName.indexOf('/') != 0) nspName = '/' + nspName;
 
   let offline = await _redis.hmget(config.redis_namespace_set_prefix + nspName, 'offline');
-  if (offline !== 'off') apiError.throw('namespace must be set offline off');
+  if (offline[0] !== 'on') apiError.throw('namespace must be set offline on');
 
 
   let legacy = Math.floor((Date.now() - config.client_legacy_expire * 3600 * 24 * 1000) / 3600 * 24 * 1000);
@@ -258,7 +259,7 @@ async function delFn(key, flushAll) {
   if (key.indexOf('/') != 0) key = '/' + key;
 
   let offline = await _redis.hmget(config.redis_namespace_set_prefix + key, 'offline');
-  if (offline !== 'off') apiError.throw('namespace must be set offline off');
+  if (offline[0] !== 'on') apiError.throw('namespace must be set offline on');
 
   await clearRealtimeDataFn(key);
 
@@ -282,6 +283,7 @@ async function delFn(key, flushAll) {
   }
 
   let clientIdList = await _redis.smembers(config.redis_total_client_set_prefix + key);
+  redisMulti = redis_db.multi();
   clientIdList.forEach(clientId => {
     redisMulti = redisMulti.del(config.redis_client_hash_prefix + clientId);
     redisMulti = redisMulti.del(config.redis_android_unread_message_list + clientId);
@@ -301,6 +303,7 @@ async function delFn(key, flushAll) {
   // 每条消息的确认回执列表和部分消息需要等超时时间之后自动移除
   let messageCount = await _redis.llen(config.redis_push_message_list_prefix + key);
   let messageIdList = await _redis.lrange(config.redis_push_message_list_prefix + key, 0, messageCount);
+  redisMulti = redis_db.multi();
   messageIdList.forEach(messageId => {
     redisMulti = redisMulti.del(config.redis_push_msg_id_prefix + messageId);
   });
@@ -316,7 +319,7 @@ async function delFn(key, flushAll) {
   }
 
   await _redis.del(config.redis_total_client_sort_set_prefix + key);
-  if (flushAll === 'true') {
+  if (flushAll === true) {
     await _redis.zrem(config.redis_namespace_key_z, key);
     await _redis.del(config.redis_namespace_set_prefix + key);
 
@@ -335,6 +338,7 @@ async function saveFn(nsp) {
   let isExists = await _redis.exists(config.redis_namespace_set_prefix + nsp.key);
   if (!isExists) {
     await _redis.zadd(config.redis_namespace_key_z, 0, nsp.key);
+    nsp.offline = 'off';
   }
 
   let apns_list;

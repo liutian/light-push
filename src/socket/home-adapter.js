@@ -302,7 +302,8 @@ async function del(self, socket, room) {
 
 
 Adapter.prototype.delAll = async function (socket, fn) {
-  if (socket.nsp.name == '/' || !namespace.data[socket.nsp.name]) {
+  const nspName = socket.nsp.name;
+  if (nspName == '/' || !namespace.data[nspName] || namespace.data[nspName].offline == 'on') {
     fn && fn();
     return;
   }

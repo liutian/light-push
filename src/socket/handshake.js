@@ -73,9 +73,11 @@ module.exports = function (socket, next) {
   }
 
   if (!userid) {
+    userid = uuid;
     socket.handshake.query.userid = uuid;
   }
   if (!platform) {
+    platform = 'web';
     socket.handshake.query.platform = 'web';
   }
 

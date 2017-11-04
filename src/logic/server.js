@@ -22,8 +22,9 @@ module.exports = function (router) {
   router.post('/api/auth/room-apns', roomApns);
 
   router.get('/api/auth/namespace', nspGet);
-  router.get('/api/admin/namespace/del/:key', nspDel);
   router.get('/api/admin/namespace/list', nspList);
+  router.get('/api/admin/namespace/clear/:key', nspClear);
+  router.get('/api/admin/namespace/flush/:key', nspFlush);
   router.post('/api/admin/namespace/save', nspSave);
 
   router.post('/api/admin/login', login);
@@ -84,8 +85,13 @@ async function nspGet(ctx, next) {
   ctx.body = await namespaceService.get(key);
 }
 
-async function nspDel(ctx, next) {
-  await namespaceService.del(ctx.params.key, ctx.query.flushAll);
+async function nspClear(ctx, next) {
+  await namespaceService.del(ctx.params.key);
+  ctx.body = {};
+}
+
+async function nspFlush(ctx, next) {
+  await namespaceService.del(ctx.params.key, true);
   ctx.body = {};
 }
 
