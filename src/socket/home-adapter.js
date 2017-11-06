@@ -69,9 +69,10 @@ function Adapter(nsp) {
   namespace.addOfflineListener(name => {
     if (this.nsp.name != name) return;
 
-    let delay = Math.random() * (5000 + this.nsp.connected.length * 100);
+    let delay = Math.random() * (5000 + Object.keys(this.nsp.connected).length * 100);
     setTimeout(() => {
       Object.values(this.nsp.connected).forEach(socket => {
+        socket._force_disconnect = true;
         socket.disconnect();
       });
       this.rooms = new Map();
@@ -303,7 +304,7 @@ async function del(self, socket, room) {
 
 Adapter.prototype.delAll = async function (socket, fn) {
   const nspName = socket.nsp.name;
-  if (nspName == '/' || !namespace.data[nspName] || namespace.data[nspName].offline == 'on') {
+  if ((nspName == '/' || !namespace.data[nspName] || namespace.data[nspName].offline == 'on') && socket._force_disconnect !== true) {
     fn && fn();
     return;
   }
@@ -314,6 +315,8 @@ Adapter.prototype.delAll = async function (socket, fn) {
   } catch (e) {
     logger.error('id: ' + socket.id + ' disconnect fail \n' + e);
     fn && fn(e);
+  } finally {
+    socket._force_disconnect = false;
   }
 
 }

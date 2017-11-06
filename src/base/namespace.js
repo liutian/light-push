@@ -1,3 +1,4 @@
+
 const log4js = require('log4js');
 
 const _util = require('../util/util');
@@ -142,7 +143,7 @@ async function clearLegacyClientFn(nspName) {
   if (offline[0] !== 'on') apiError.throw('namespace must be set offline on');
 
 
-  let legacy = Math.floor((Date.now() - config.client_legacy_expire * 3600 * 24 * 1000) / 3600 * 24 * 1000);
+  let legacy = Math.floor((Date.now() - config.client_legacy_expire * 3600 * 1000) / (3600 * 1000));
   let clientIdList = await _redis.zrangebyscore(config.redis_total_client_sort_set_prefix + nspName, '-inf', legacy);
   let redisMulti;
 
@@ -176,7 +177,6 @@ async function clearLegacyClientFn(nspName) {
       redisMulti = undefined;
     }
 
-    redisMulti = redis_db.multi();
     for (let j = 0; j < roomList.length; j++) {
       let room = roomList[j];
       let nspAndRoom = nspName + '_' + room;
@@ -185,6 +185,7 @@ async function clearLegacyClientFn(nspName) {
       let clientCount = await _redis.scard(config.redis_total_room_client_set_prefix + '{' + nspAndRoom + '}');
       if (clientCount > 0) continue;
 
+      redisMulti = redis_db.multi();
       redisMulti = redisMulti.srem(config.redis_total_all_room_set_prefix + nspName, room);
       if (isUserRoom) {
         let userName = room.replace(USER_ROOM_PREFIX_REG, '');
@@ -300,7 +301,7 @@ async function delFn(key, flushAll) {
     redisMulti = undefined;
   }
 
-  // 每条消息的确认回执列表和部分消息需要等超时时间之后自动移除
+  // 每条消息的确认回执列表和部分消息需要等超时时间之后自动移除,消息离线推送临时队列中相关消息ID无法清除，只能由message_work消化掉
   let messageCount = await _redis.llen(config.redis_push_message_list_prefix + key);
   let messageIdList = await _redis.lrange(config.redis_push_message_list_prefix + key, 0, messageCount);
   redisMulti = redis_db.multi();

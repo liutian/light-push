@@ -15,7 +15,7 @@ Object.keys(log4jConfig.appenders).forEach(function (key) {
   let separatorIndex = appender.filename.lastIndexOf('/');
   if (separatorIndex != -1) {
     let arr = Array.from(appender.filename);
-    arr.splice(separatorIndex + 1, 0, 'logic_' + config.port + '_');
+    arr.splice(separatorIndex + 1, 0, config.log_prefix + '_');
     appender.filename = arr.join('');
     if (config.log_path) {//默认路径为程序入口主文件所在目录
       appender.filename = path.resolve(config.log_path + '/' + appender.filename);

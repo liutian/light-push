@@ -71,16 +71,17 @@ async function pushFn(data) {
   data.ackCount = data.ackIOSCount = data.ackAndroidCount = data.onlineClientCount = 0;
 
   //存储消息
-  await _redis.multi().hmset(PUSH_MSG_ID_PREFIX + hsetKey, Object.assign({}, data, { pushData: JSON.stringify(data.pushData) })).expire(PUSH_MSG_ID_PREFIX + hsetKey, config.push_message_h_expire).exec();
+  await _redis.multi().hmset(PUSH_MSG_ID_PREFIX + hsetKey, Object.assign({}, data, { pushData: JSON.stringify(data.pushData) }))
+    .expire(PUSH_MSG_ID_PREFIX + hsetKey, config.push_message_h_expire * 3600).exec();
   //存储消息ID到系统消息ID列表中
   await _redis.multi().lpush(PUSH_MESSAGE_LIST_PREFIX + data.namespace, hsetKey).ltrim(PUSH_MESSAGE_LIST_PREFIX + data.namespace, 0, config.push_message_list_max_limit - 1).exec();
   //初始化确认消息回执的客户的集合
   let androidAckKey = PUSH_ACK_SET_PREFIX + 'android_{' + nspAndRoom + '}_' + hsetKey;
-  await _redis.multi().sadd(androidAckKey, '__ack').expire(androidAckKey, config.push_message_h_expire).exec();
+  await _redis.multi().sadd(androidAckKey, '__ack').expire(androidAckKey, config.push_message_h_expire * 3600).exec();
   let iosAckKey = PUSH_ACK_SET_PREFIX + 'ios_{' + nspAndRoom + '}_' + hsetKey;
-  await _redis.multi().sadd(iosAckKey, '__ack').expire(iosAckKey, config.push_message_h_expire).exec();
+  await _redis.multi().sadd(iosAckKey, '__ack').expire(iosAckKey, config.push_message_h_expire * 3600).exec();
   let webAckKey = PUSH_ACK_SET_PREFIX + 'web_{' + nspAndRoom + '}_' + hsetKey;
-  await _redis.multi().sadd(webAckKey, '__ack').expire(webAckKey, config.push_message_h_expire).exec();
+  await _redis.multi().sadd(webAckKey, '__ack').expire(webAckKey, config.push_message_h_expire * 3600).exec();
   //将推送消息放到消息队列中
   if (data.leaveMessage) {
     setTimeout(function () {

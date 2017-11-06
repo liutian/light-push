@@ -14,14 +14,14 @@
     try {
       // var uuid = window.parseInt(Math.random() * 1000000);
       // var uuid = Math.random() * 10000;
-      var uuid = 'uui333';
-      var userid = 'user11';
+      var uuid = 'uuid001';
+      var userid = 'user001';
       var socket = io.connect('http://127.0.0.1:21314/demo?uuid=' + uuid + '&userid=' + userid);
     } catch (e) {
       alert('error:' + e);
     }
     socket.on('connect', function () {
-      var rooms = ['room555'];
+      var rooms = ['room002'];
 
       socket.emit('joinRoom', rooms, function (result) {
         console.log('joinRoom:' + JSON.stringify(result));

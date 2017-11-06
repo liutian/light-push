@@ -7,7 +7,7 @@ const argv = require('yargs').argv;
 
 // 加载配置信息
 const config = require('../config');
-config.log_prefix = 'worker_message_' + argv.n;
+config.log_prefix = 'worker_message_' + (argv.n || '');
 //启动日志服务
 require('../config/log4j-config');
 
@@ -94,6 +94,10 @@ function postMessage() {
 
 async function _postMessage(msgId) {
   let msg = await _redis.hgetall(config.redis_push_msg_id_prefix + msgId);
+  if (!msg || !msg.pushData) {
+    return;
+  }
+
   try {
     msg.pushData = JSON.parse(msg.pushData);
   } catch (e) {
@@ -110,7 +114,7 @@ async function _postMessage(msgId) {
     let unreadKey = config.redis_android_unread_message_list + androidClientList[j];
     await _redis.multi().lpush(unreadKey, msgId)
       .ltrim(unreadKey, 0, config.android_unread_message_list_max_limit - 1)
-    expire(unreadKey, config.push_message_h_expire).exec();
+    expire(unreadKey, config.push_message_h_expire * 3600).exec();
   }
 
   await postForIOS(msg);
