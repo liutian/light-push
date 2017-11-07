@@ -38,12 +38,12 @@ module.exports = function (socket, next) {
   }
 
   //uuid必填用来确定设备与服务器之间的连接
-  if (!uuid || uuid.length > 40 || !key_reg.test(uuid)) {
+  if (!uuid || uuid.length > config.uuid_max_length || !key_reg.test(uuid)) {
     socket.disconnect();
     return next(new Error('uuid invalid'));
   }
 
-  if (userid && (userid.length > 40 || !key_reg.test(userid))) {
+  if (userid && (userid.length > config.userid_max_length || !key_reg.test(userid))) {
     socket.disconnect();
     return next(new Error('userid invalid'));
   }

@@ -39,12 +39,12 @@ async function transferFn(data) {
     || data.sourceRooms.length <= 0
     || !data.type || !data.namespace) {
     apiError.throw('targetRoom and sourceRooms and type and namespace can not be empty');
-  } else if (data.targetRoom.length > 20 || !key_reg.test(data.targetRoom)) {
+  } else if (data.targetRoom.length > config.room_max_length || !key_reg.test(data.targetRoom)) {
     apiError.throw('targetRoom invalid');
   } else {
     for (let i = 0; i < data.sourceRooms.length; i++) {
       let room = data.sourceRooms[i];
-      if (room.length > 20 || !key_reg.test(room)) {
+      if (room.length > config.room_max_length || !key_reg.test(room)) {
         apiError.throw('sourceRoom invalid');
       }
     }

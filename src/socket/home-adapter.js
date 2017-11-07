@@ -120,7 +120,7 @@ Adapter.prototype.addAll = async function (socket, rooms, fn) {
       return;
     }
     room = room.replace(ROOM_PREFIX_REG, '');
-    if (room.length > 20 || !key_reg.test(room)) {
+    if (room.length > config.room_max_length || !key_reg.test(room)) {
       fn && fn(new Error('room invalid'));
       return;
     }

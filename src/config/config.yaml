@@ -78,6 +78,10 @@ default: &default
   android_unread_message_list_max_limit: 100                                       #每一个android设备可以保存未读消息总数
   client_legacy_expire: 1                                                          #客户端在最后一次上线之后多长时间会被服务器清除数据，单位小时
 
+  room_max_length: 100
+  userid_max_length: 100
+  uuid_max_length: 100
+  namespace_max_length: 50
 
   emit_msg_pick_key: true                                                          #在线推送的消息是否过滤不必要的字段
 
