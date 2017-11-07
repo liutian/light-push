@@ -333,7 +333,7 @@ async function delFn(key, flushAll) {
 
 async function saveFn(nsp) {
   if (!nsp || !nsp.key) apiError.throw('key is null');
-  if (nsp.key.length > 20 || !key_reg.test(nsp.key)) apiError.throw('namespace invalid');
+  if (nsp.key.length > 40 || !key_reg.test(nsp.key)) apiError.throw('namespace invalid');
   nsp = _util.pick(nsp, nspKeys);
 
   let isExists = await _redis.exists(config.redis_namespace_set_prefix + nsp.key);
