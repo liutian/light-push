@@ -80,11 +80,11 @@ async function listFn(data) {
 
   let lkey = PUSH_MESSAGE_LIST_PREFIX + data.namespace;
   data.page = Math.min(data.page || 1, config.push_message_list_max_limit);
-  data.size = Math.min(data.size || 20, 100);
+  data.size = Math.min(data.size || 20, 500);
 
   let startIndex = (data.page - 1) * data.size;
   let endIndex = data.page * data.size - 1;
-  if (data.page * data.size > config.push_message_list_max_limit) {
+  if (endIndex >= config.push_message_list_max_limit) {
     endIndex = config.push_message_list_max_limit - 1;
   }
   if (startIndex > endIndex) {
