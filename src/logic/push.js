@@ -12,7 +12,7 @@ const PUSH_MSG_ID_PREFIX = config.redis_push_msg_id_prefix;
 const PUSH_MESSAGE_LIST_PREFIX = config.redis_push_message_list_prefix;
 const PUSH_ACK_SET_PREFIX = config.redis_push_ack_set_prefix;
 const PUSH_MSG_UUID = config.redis_push_msg_uuid;
-const pushKList = 'namespace room except pushData apnsName leaveMessage';
+const pushKList = 'namespace room except pushData apnsName leaveMessage extra';
 
 const _redis = redisFactory.getInstance(true);
 const homeBroadcastPub = redisFactory.getInstance();
@@ -93,15 +93,18 @@ async function pushFn(data) {
     }, config.worker_message_timeout);
   }
 
-  //发布redis推送订阅频道
-  let publishData = config.emit_msg_pick_key ? _util.pick(data, 'id namespace room pushData sendDate') : data;
-  delete publishData.pushData.apsData;
-  let chn = config.redis_home_broadcast_channel + '_' + data.namespace;
-  let msg = JSON.stringify([publishData, {
-    rooms: [data.room],
-    except: data.except
-  }]);
-  homeBroadcastPub.publish(chn, msg);
+  // 主动放弃推送到客户端,模拟网络异常导致推送无法到达的情况
+  if (data.extra !== 'lost') {
+    //发布redis推送订阅频道
+    let publishData = config.emit_msg_pick_key ? _util.pick(data, 'id namespace room pushData sendDate ') : data;
+    delete publishData.pushData.apsData;
+    let chn = config.redis_home_broadcast_channel + '_' + data.namespace;
+    let msg = JSON.stringify([publishData, {
+      rooms: [data.room],
+      except: data.except
+    }]);
+    homeBroadcastPub.publish(chn, msg);
+  }
 
   return { id: hsetKey };
 }
