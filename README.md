@@ -403,20 +403,73 @@ openssl pkcs12 -in key.p12 -nocerts -out key.pem -nodes
 - 访问管理页面: `http://127.0.0.1/push-admin` 登录名 liuss 密码 123456  勾选管理员登陆
 
 ### 如何避免因网络不稳定造成的影响
-- 每次发送消息后延迟5s之清除旧的定时器创建新的定时器，保证只有一个最新的定时器)，验证发送的消息是否被对方接收，
+- 每次发送消息后延迟5s(清除旧的定时器创建新的定时器，保证只有一个最新的定时器)，验证发送的消息是否被对方接收，
   如果对方没有接收到，则该消息标记：“对方可能已离线，无法及时查看该消息” 或者 “消息发送异常” 或者 图标提示，
-  当对方上线时清除标记（客服端实现即可）或者接收到对方发来的任何消息时清除标记 (“客户” 端实现即可)   
-- 消息总数：客户端和服务器端都会保存消息的总数，对于客户端来说，当本地发送消息或者接收到消息时进行总数+1(但不一定总是进行+1操作)，对于服务器端来说，只有当推送消息成功时进行总数+1，同时推送消息中包含的总数是+1之前都总数。
-- 消息总数比对规则：当本地总数比后端总数小，则主动更新消息列表，同时在消息列表接口会返回后端最新总数，客户端把本地总数重置为后端最新总数+1(在定时器中执行的比对只重置为后端最新总数)。当本地总数等于后端总数时，客户端只把本地总数+1(在定时器中执行的比对不做任何操作)。当本地总数比后端总数大时，客户端不做任何操作。在比对之前一定要确认比对的是同一个消息列表的消息总数，如果不一致，则以后端为准，同时本地总数重置为1。如果在定时器中执行时消息列表唯一标示不一致，后端总数也为null，则清空总数和消息列表唯一标示，同时停止定时器。
-- 触发比对的条件：当客户端发送消息时，后端会在请求结果中返回当前的总数，客户端拿后端总数和本地的总数进行比较；当客户端接收到推送消息时，消息中包含后端当前的总数，客户端拿后端总数和本地的总数进行比较；前两种情况都会创建全局的定时器，创建时清除上一个定时器，保证只有一个定时器在运行。当定时器执行时，客户端主动向后端询问当前消息总数，拿到结果再进行比较。
-- 当客户端首次运行时，主动向后端询问当前消息总数，也就是刚开始的本地总数总是由后端指定。
-- 当客户端主动向后端询问当前消息总数时执行：`socket.io.opts.transports = ['polling'];`
-- 当发生重连操作时切换推送连接方式，代码如下：
-``` 
+  当对方上线时清除标记（客服端实现即可）当接收到对方发来的任何消息时清除标记 (“客户” 端实现即可)   
+- 消息计数器：客户端和服务器端都会对每一个会话维护一个消息计数器：对于客户端来说，当本地发送消息或者接收到推送的消息时进行+1(但不一定总是进行+1操作)；对于服务器端来说，只有当执行完推送消息并且成功时进行+1；当本地发送消息给服务器时，服务器会返回当前缓存中的消息计数器(注意不是回话真实的消息总数)，当服务器推送消息时也会附带当前缓存中的消息计数器(注意不是回话真实的消息总数)，推送成功之后将缓存中的计数器+1
+- 本地客户端消息同步规则：
+  ```
+  let localData = {
+    clientNum: 0,// 本地消息计数器
+    msgList: [],// 本地消息列表
+    syncMsgTimeout: null // 定时器
+  }
+
+  // 当客户端首次运行时，主动向后端请求消息计数器
+  syncMsg('init', 0);
+
+  // reason 发起同步的原因
+  // timeout 执行同步的延迟时间
+  // fetch 当本地计数器和服务器计数器不一致时，服务器是否需要返回最新的消息列表，只有首次执行为false，其他情况都为true
+  function syncMsg(reason, timeout, fetch){
+    // 清除定时器
+    clearTimeout(localData.syncMsgTimeout);
+    // 如果延迟执行则创建定时器
+    if(timeout){
+      localData.syncMsgTimeout = setTimeout(syncMsg, timeout, reason, 0, fetch);
+      return;
+    }
+
+    let query = {
+      fetch: fetch,
+      reason: reason,
+      clientNum: localData.clientNum
+    }
+    xhr.get(url, query, function(res){
+      // 当本地计数器小于服务器计数器时说明本地网络不稳定，将连接模式降级为长连接
+      if(localData.clientNum < res.serverNum){
+        socket.io.opts.transports = ['polling'];
+      }
+      localData.clientNum = res.serverNum;
+      // 当服务器返回最新数据时覆盖本地列表
+      if(res.msgList.length > 0){
+        localData.msgList = res.msgList;
+      }
+      // 每次执行完同步操作之后，开启下一次同步操作
+      localData.syncMsgTimeout = setTimeout(syncMsg, 60000, 'tick', 0, true);
+    })
+  }
+
+  // 发送消息
+  function sendMsg(data){
+    xhr.post(url, data, function(res){
+      if(localData.clientNum < res.serverNum){
+        syncMsg('sendMsg', 2000, true);
+      }
+      ++localData.clientNum;
+    })
+  }
+
+  // 接收消息
+  function onPush(data){
+    if(localData.clientNum < data.serverNum){
+      syncMsg('push', 2000, true);
+    }
+    ++localData.clientNum;
+  }
+
+  //当发生重连操作时切换连接模式
   socket.on('reconnect_attempt', () => {
     socket.io.opts.transports = ['polling'];
   })
-```
-
-
-
+  ```
