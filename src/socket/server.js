@@ -8,6 +8,7 @@ const clientService = require('../base/client');
 const _util = require('../util/util');
 const logger = log4js.getLogger('socket_service');
 const _redis = redisFactory.getInstance(true);
+const pushService = require('../logic/push');
 
 const PUSH_ACK_SET_PREFIX = config.redis_push_ack_set_prefix;
 
@@ -144,6 +145,23 @@ async function connectionListener(socket) {
       }
     }, function (err) {
       callback({ status: err.status || 500, msg: err.msg || err.message });
+    });
+  });
+
+  // 客户端主动推送消息，艰难的决定，从一开始就告诉自己绝不能开这个接口否则出问题排查起来很困难，但是没办法迫于业务的压力
+  socket.on('push', function (data, callback) {
+    let d = Object.assign({
+      namespace: socket.nsp.name,
+      except: socket.id,
+      from: socket.id
+    }, data);
+
+    pushService.push(d).then((result) => {
+      if (!callback) return;
+      callback(Object.assign({ status: 200, msg: 'ok' }, result));
+    }).catch((e) => {
+      if (!callback) return;
+      callback({ status: e.status || 500, msg: e.msg || e.message });
     });
   });
 }

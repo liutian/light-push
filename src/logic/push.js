@@ -12,7 +12,7 @@ const PUSH_MSG_ID_PREFIX = config.redis_push_msg_id_prefix;
 const PUSH_MESSAGE_LIST_PREFIX = config.redis_push_message_list_prefix;
 const PUSH_ACK_SET_PREFIX = config.redis_push_ack_set_prefix;
 const PUSH_MSG_UUID = config.redis_push_msg_uuid;
-const pushKList = 'namespace room except pushData apnsName leaveMessage extra';
+const pushKList = 'namespace room except pushData apnsName leaveMessage extra from';
 
 const _redis = redisFactory.getInstance(true);
 const homeBroadcastPub = redisFactory.getInstance();
