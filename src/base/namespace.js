@@ -187,18 +187,18 @@ async function clearLegacyClientFn(nspName) {
 
       redisMulti = redis_db.multi();
       redisMulti = redisMulti.srem(config.redis_total_all_room_set_prefix + nspName, room);
-      if (isUserRoom) {
+      if (isUserRoom) {// 如果是用户类型的房间，则删除该用户所有相关信息
         let userName = room.replace(USER_ROOM_PREFIX_REG, '');
         redisMulti = redisMulti.srem(config.redis_user_set_prefix + nspName, userName);
         let userRoomList = await _redis.smembers(config.redis_user_room_set_prefix + nspName + '_' + userName);
 
         for (let h = 0; h < userRoomList.length; h++) {
           let userRoom = userRoomList[h];
-          redisMulti = redisMulti.srem(config.redis_room_user_set_prefix + nspName + '_' + userRoom);
+          redisMulti = redisMulti.srem(config.redis_room_user_set_prefix + nspName + '_' + userRoom, userName);
         }
         redisMulti = redisMulti.del(config.redis_user_room_set_prefix + nspName + '_' + userName);
       } else {
-        redisMulti = redisMulti.del(config.redis_room_set_prefix + nspName, room);
+        redisMulti = redisMulti.srem(config.redis_room_set_prefix + nspName, room);
       }
 
       try {
