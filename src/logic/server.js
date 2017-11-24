@@ -26,6 +26,7 @@ module.exports = function (router) {
   router.get('/api/admin/namespace/clear/:key', nspClear);
   router.get('/api/admin/namespace/flush/:key', nspFlush);
   router.post('/api/admin/namespace/save', nspSave);
+  router.get('/api/admin/report/online', reportOnlineAdmin);
 
   router.post('/api/admin/login', login);
   router.post('/api/auth/login', login);
@@ -49,19 +50,23 @@ async function push(ctx, next) {
 }
 
 async function reportPushList(ctx, next) {
-  ctx.request.query.namespace = ctx.state.namespace;
-  ctx.body = await reportPushService.list(ctx.request.query);
+  ctx.query.namespace = ctx.state.namespace;
+  ctx.body = await reportPushService.list(ctx.query);
 }
 
 async function reportPushGet(ctx, next) {
-  ctx.request.query.namespace = ctx.state.namespace;
-  ctx.request.query.id = ctx.params.id;
-  ctx.body = await reportPushService.get(ctx.request.query);
+  ctx.query.namespace = ctx.state.namespace;
+  ctx.query.id = ctx.params.id;
+  ctx.body = await reportPushService.get(ctx.query);
 }
 
 async function reportOnline(ctx, next) {
-  ctx.request.query.namespace = ctx.state.namespace;
-  ctx.body = await reportOnlineService.online(ctx.request.query);
+  ctx.query.namespace = ctx.state.namespace;
+  ctx.body = await reportOnlineService.online(ctx.query);
+}
+
+async function reportOnlineAdmin(ctx) {
+  ctx.body = await reportOnlineService.online(ctx.query);
 }
 
 async function transfer(ctx, next) {
@@ -108,7 +113,7 @@ async function nspUpdate(ctx, next) {
 }
 
 async function nspList(ctx, next) {
-  ctx.body = await namespaceService.list();
+  ctx.body = await namespaceService.list(ctx.query);
 }
 
 

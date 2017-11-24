@@ -5,6 +5,7 @@ const _util = require('../util/util');
 const apiError = require('../util/api-error');
 const config = require('../config');
 const redisFactory = require('../util/redis-factory');
+const reportOnlineService = require('../logic/report-online');
 
 const logger = log4js.getLogger('namespace');
 const _redis = redisFactory.getInstance(true);
@@ -219,7 +220,7 @@ async function clearLegacyClientFn(nspName) {
 }
 
 async function init() {
-  let nspList = await listFn();
+  let { list: nspList } = await listFn({ pageSize: 10000000000 });
   nspList.forEach(function (v) {
     createApnsObj(v);
     nspObj[v.key] = v;
@@ -240,19 +241,53 @@ async function getFn(key) {
   return nsp;
 }
 
-async function listFn() {
-  var nspKeyList = await _redis.zrange(config.redis_namespace_key_z, 0, 1000);
-  var nspList = [];
+async function listFn(data) {
+  data = _util.pick(data || {}, ['key', 'name', 'offline', 'page', 'pageSize', 'online']);
 
-  for (let i = 0; i < nspKeyList.length; i++) {
-    var nspKey = nspKeyList[i];
+  let start = ((+data.page || 1) - 1) * (+data.pageSize || 20);
+  let end = start + (+data.pageSize || 20) - 1;
+  let nspList = [];
 
-    var nsp = await getFn(nspKey);
+  let nsCount = await _redis.zcount(config.redis_namespace_key_z, '-inf', '+inf');
+  if (!data.key && !data.name && (data.offline === 'all' || !data.offline)) {
+    let list = await _redis.zrange(config.redis_namespace_key_z, start, end);
 
-    nspList.push(nsp);
+    for (let nspKey of list) {
+      let nsp = await getFn(nspKey);
+      nspList.push(nsp);
+    }
+  } else {
+    let allList = await _redis.zrange(config.redis_namespace_key_z, 0, nsCount);
+    let currIndex = -1;
+
+    for (let i = 0; i < allList.length; i++) {
+      let nspKey = allList[i];
+      let nsp = await getFn(nspKey);
+      if (data.key && !nsp.key.includes(data.key)) {
+        continue;
+      } else if (data.name && !nsp.name.includes(data.name)) {
+        continue;
+      } else if (data.offline && data.offline !== nsp.offline) {
+        continue;
+      }
+      currIndex++;
+      if (currIndex >= start && currIndex <= end) {
+        nspList.push(nsp);
+      }
+    }
+
+    nsCount = currIndex + 1;
   }
 
-  return nspList;
+  if (data.online) {
+    for (let i = 0; i < nspList.length; i++) {
+      let nsp = nspList[i];
+      let report = await reportOnlineService.online({ namespace: nsp.key });
+      Object.assign(nsp, report);
+    }
+  }
+
+  return { list: nspList, total: nsCount };
 }
 
 async function delFn(key, flushAll) {
@@ -330,7 +365,7 @@ async function delFn(key, flushAll) {
 
 }
 
-
+// 如果 offline  为on,服务器会拒绝所有新的连接同时在一定时间之后会断开所有旧的连接
 async function saveFn(nsp) {
   if (!nsp || !nsp.key) apiError.throw('key is null');
   if (nsp.key.length > config.namespace_max_length || !key_reg.test(nsp.key)) apiError.throw('namespace invalid');

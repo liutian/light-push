@@ -20,11 +20,21 @@ exports.online = onlineFn;
  */
 async function onlineFn(data) {
   //解析参数
-  data = _util.pick(data, 'namespace room detail');
-  data.namespace = data.namespace || '/';
+  data = _util.pick(data || {}, 'namespace room detail');
 
+  if (!data.namespace) {
+    let roomCount = userCount = clientCount = 0;
+    let nsTotal = await _redis.zcount(config.redis_namespace_key_z, '-inf', '+inf');
+    let list = await _redis.zrange(config.redis_namespace_key_z, 0, nsTotal);
+    for (let i = 0; i < list.length; i++) {
+      let nsp = await namespaceOnline(list[i]);
+      roomCount += nsp.roomCount;
+      userCount += nsp.userCount;
+      clientCount += nsp.clientCount;
+    }
 
-  if (Array.isArray(data.room) || (_util.isString(data.room) && !!data.room)) {
+    return { userCount, roomCount, clientCount };
+  } else if (Array.isArray(data.room) || (_util.isString(data.room) && !!data.room)) {
     let roomArr = Array.isArray(data.room) ? data.room : [data.room];
     let reportResult = [];
 
@@ -49,22 +59,26 @@ async function onlineFn(data) {
     }
     return reportResult;
   } else {
-    let reportResult = {};
-    reportResult.roomCount = await _redis.scard(ROOM_SET_PREFIX + data.namespace);
-    reportResult.userCount = await _redis.scard(USER_SET_PREFIX + data.namespace);
-    reportResult.clientCount = await _redis.scard(CLIENT_SET_PREFIX + data.namespace);
-
-
-    if (data.detail && reportResult.roomCount <= config.report_online_list_max_limit) {
-      reportResult.room = await _redis.smembers(ROOM_SET_PREFIX + data.namespace);
-    }
-    if (data.detail && reportResult.clientCount <= config.report_online_list_max_limit) {
-      reportResult.client = await _redis.smembers(CLIENT_SET_PREFIX + data.namespace);
-    }
-    if (data.detail && reportResult.userCount <= config.report_online_list_max_limit) {
-      reportResult.user = await _redis.smembers(USER_SET_PREFIX + data.namespace);
-    }
-    return reportResult;
+    return await namespaceOnline(data.namespace, data.detail);
   }
+}
+
+async function namespaceOnline(nsp, detail) {
+  let reportResult = {};
+  reportResult.roomCount = await _redis.scard(ROOM_SET_PREFIX + nsp);
+  reportResult.userCount = await _redis.scard(USER_SET_PREFIX + nsp);
+  reportResult.clientCount = await _redis.scard(CLIENT_SET_PREFIX + nsp);
+
+
+  if (detail && reportResult.roomCount <= config.report_online_list_max_limit) {
+    reportResult.room = await _redis.smembers(ROOM_SET_PREFIX + nsp);
+  }
+  if (detail && reportResult.clientCount <= config.report_online_list_max_limit) {
+    reportResult.client = await _redis.smembers(CLIENT_SET_PREFIX + nsp);
+  }
+  if (detail && reportResult.userCount <= config.report_online_list_max_limit) {
+    reportResult.user = await _redis.smembers(USER_SET_PREFIX + nsp);
+  }
+  return reportResult;
 }
 
