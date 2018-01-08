@@ -14,7 +14,7 @@ const redis_p_a_s = config.redis_push_ack_set_prefix;
 const redis_p_m_u = config.redis_push_msg_uuid;
 const redis_p_m_t_l = config.redis_push_message_temp_list_prefix;
 const redis_h_b_c = config.redis_home_broadcast_channel;
-const pushKList = 'namespace room except pushData apnsName leaveMessage extra from';
+const pushKList = 'namespace room except pushData apnsName leaveMessage extra from expire';
 
 const _redis = redisFactory.getInstance(true);
 const homeBroadcastPub = redisFactory.getInstance();
@@ -50,6 +50,8 @@ async function pushFn(data) {
     apiError.throw('this namespace lose');
   } else if (nspConfig.offline == 'on') {
     apiError.throw('this namespace offline');
+  }else if((data.expire || config.push_message_expire) > config.push_message_max_expire){
+    apiError.throw('expire invalid');
   }
 
   //判断apsData转化为JSON字符串后是否超过预定长度
@@ -68,22 +70,23 @@ async function pushFn(data) {
   //初始化数据
   let nspAndRoom = data.namespace + '_' + data.room;
   let hsetKey = await _redis.incr(redis_p_m_u);
+  data.expire = Math.min((data.expire || config.push_message_expire), config.push_message_max_expire);
   data.id = hsetKey;
   data.sendDate = Date.now();
   data.ackCount = data.ackIOSCount = data.ackAndroidCount = data.onlineClientCount = 0;
 
   //存储消息
   await _redis.multi().hmset(redis_p_m_i + hsetKey, Object.assign({}, data, { pushData: JSON.stringify(data.pushData) }))
-    .expire(redis_p_m_i + hsetKey, config.push_message_h_expire * 3600).exec();
+    .expire(redis_p_m_i + hsetKey, data.expire * 3600).exec();
   //存储消息ID到系统消息ID列表中
   await _redis.multi().lpush(redis_p_m_l + data.namespace, hsetKey).ltrim(redis_p_m_l + data.namespace, 0, config.push_message_list_max_limit - 1).exec();
   //初始化确认消息回执的客户的集合
   let androidAckKey = redis_p_a_s + 'android_{' + nspAndRoom + '}_' + hsetKey;
-  await _redis.multi().sadd(androidAckKey, '__ack').expire(androidAckKey, config.push_message_h_expire * 3600).exec();
+  await _redis.multi().sadd(androidAckKey, '__ack').expire(androidAckKey, data.expire * 3600).exec();
   let iosAckKey = redis_p_a_s + 'ios_{' + nspAndRoom + '}_' + hsetKey;
-  await _redis.multi().sadd(iosAckKey, '__ack').expire(iosAckKey, config.push_message_h_expire * 3600).exec();
+  await _redis.multi().sadd(iosAckKey, '__ack').expire(iosAckKey, data.expire * 3600).exec();
   let webAckKey = redis_p_a_s + 'web_{' + nspAndRoom + '}_' + hsetKey;
-  await _redis.multi().sadd(webAckKey, '__ack').expire(webAckKey, config.push_message_h_expire * 3600).exec();
+  await _redis.multi().sadd(webAckKey, '__ack').expire(webAckKey, data.expire * 3600).exec();
   //将推送消息放到消息队列中
   if (data.leaveMessage) {
     setTimeout(function () {

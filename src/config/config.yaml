@@ -20,7 +20,7 @@ default: &default
   redis_prefix: p_
   redis_push_msg_id_prefix: msg_h_                                       #消息id的前缀
   redis_total_client_set_prefix: t_c_s_                                  #保存每个命名空间下历史客户端集合
-  redis_total_client_sort_set_prefix: t_c_z_                        #保持每个命名空间下历史客户端以最后登陆时间距1970元年的天数为分数排列
+  redis_total_client_sort_set_prefix: t_c_z_                             #保持每个命名空间下历史客户端以最后登陆时间距1970元年的天数为分数排列
   redis_client_set_prefix: c_s_                                          #保存每个命名空间下的客户端集合
   redis_user_set_prefix: u_s_                                            #保存每个命名空间下的用户集合
   redis_total_all_room_set_prefix: t_all_r_s_                            #保存每个命名空间下历史房间集合(包括普通房间和用户类型的房间)        
@@ -47,7 +47,7 @@ default: &default
   redis_android_room_client_set_prefix: a_r_c_s_                         #保存单个房间下在线的android客户端集合(包括普通房间和用户类型的房间)
   redis_total_android_room_client_set_prefix: t_a_r_c_s_                 #保存单个房间下所有android客户端集合(包括普通房间和用户类型的房间)
 
-  key_reg: '^[\\\w.\\\d\-$#/]+$'                                                   #命名空间 房间  userid  uuid 正则
+  key_reg: '^[\\\w.\\\d\-$#/]+$'                                         #命名空间 房间  userid  uuid 正则
   #缓存键名简写对应表
   #p      push
   #msg    message 
@@ -69,14 +69,15 @@ default: &default
   room_activity_broadcast: true                                                    #进入或者离开房间时是否需要向房间广播该变动
   worker_message_timeout: 5000                                                     #消息发送之后延迟多长时间进行离线推送(android|ios)
 
-  push_message_h_expire: 1                                                         #每条消息的保存时间，单位小时
-  push_message_list_max_limit: 10                                                  #每个命名空间可以查看到的分页消息总数(只是用于调试或者简单查看历史推送记录)
+  push_message_expire: 1                                                           #默认每条消息的失效时间，单位小时
+  push_message_max_expire: 10                                                      #每条消息的失效时间，最大值，单位小时
+  push_message_list_max_limit: 1000                                                #每个命名空间可以查看到的分页消息总数(只是用于调试或者简单查看历史推送记录)
   user_room_prefix: user_                                                          #用户类型的房间名前缀
   room_prefix: room_                                                               #房间名前缀,只是做验证防止非法用户名，保持到redis时已经去除，作用不大
   report_online_list_max_limit: 1000                                               #统计在线信息时如果查看详情可以返回的最大信息数(房间名，userid，uuid)
   report_push_ack_detail_max_limit: 1000                                           #统计推送结果时可以返回的ack客户端总数
   android_unread_message_list_max_limit: 100                                       #每一个android设备可以保存未读消息总数
-  client_legacy_expire: 1                                                          #客户端在最后一次上线之后多长时间会被服务器清除数据，单位小时
+  client_legacy_expire: 240                                                        #客户端在最后一次上线之后多长时间会被服务器清除数据，单位小时
 
   room_max_length: 100
   userid_max_length: 100

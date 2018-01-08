@@ -122,7 +122,7 @@ async function _postMessage(msgId) {
     let unreadKey = redis_a_u_m_l + androidClientList[j];
     await _redis.multi().lpush(unreadKey, msgId)
       .ltrim(unreadKey, 0, config.android_unread_message_list_max_limit - 1)
-    expire(unreadKey, config.push_message_h_expire * 3600).exec();
+    expire(unreadKey, msg.expire * 3600).exec();
   }
 
   await postForIOS(msg);

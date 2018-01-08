@@ -86,6 +86,7 @@ socket.on('connect', function(){
 - `apnsName` : `[String]` apns推送配置名称 如果为空则使用默认apns推送即：`/` 命名空间下 `apnsName` 为 `default` 的证书进行推送，所以如果想使用默认apns推送需要保证 `/` 命名空间存在，同时 `apnsName` 为空
 - `leaveMessage` : `[Boolean]` 是否开启离线消息，针对 ios 平台就是是否开启 `apns` 推送，针对 android 平台就是是否保存为离线消息
 - `except` : `[String]` 哪些客户端不需要收到推送，当不希望推送房间中某个客户端收到时有用
+- `expire` : `[Number]` 每条消息的失效时间，单位小时
 - `extra` : `[String]` 额外字段，当值为`lost`时，服务器会放弃推送该条消息，但是数据会保留下来
 
 > - 客户的接收到推送消息之后必须向服务器发送消息回执: `socket.emit('ackPush',{id: data.id});`
