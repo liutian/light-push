@@ -5,12 +5,12 @@ const config = require('../config');
 const redisFactory = require('../util/redis-factory');
 const logger = log4js.getLogger('socket_transfer');
 
-const TRANSFER = config.redis_room_transfer_channel;
+const redis_r_t_c = config.redis_room_transfer_channel;
 
 //创建专门通道
 const redis_sub = redisFactory.getInstance();
-redis_sub.subscribe(TRANSFER, function (err, count) {
-  if (err) logger.error('subscribe ' + TRANSFER + ' fail : ' + err);
+redis_sub.subscribe(redis_r_t_c, function (err, count) {
+  if (err) logger.error('subscribe ' + redis_r_t_c + ' fail : ' + err);
 });
 redis_sub.on('message', redisMessage);
 
@@ -21,7 +21,7 @@ redis_sub.on('message', redisMessage);
 function redisMessage(channel, data) {
   data = JSON.parse(data);
 
-  if (channel === TRANSFER) {
+  if (channel === redis_r_t_c) {
     transferFn(data);
   }
 }

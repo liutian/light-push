@@ -10,7 +10,11 @@ const logger = log4js.getLogger('socket_service');
 const _redis = redisFactory.getInstance(true);
 const pushService = require('../logic/push');
 
-const PUSH_ACK_SET_PREFIX = config.redis_push_ack_set_prefix;
+const redis_p_a_s = config.redis_push_ack_set_prefix;
+const redis_p_m_i = config.redis_push_msg_id_prefix;
+const redis_a_u_m_l = config.redis_android_unread_message_list;
+const redis_c_h = config.redis_client_hash_prefix;
+const redis_t_c_s_s = config.redis_total_client_sort_set_prefix;
 
 exports.addNSRegister = addNSRegisterFn;
 exports.removeNSRegister = removeNSRegisterFn;
@@ -84,7 +88,7 @@ async function connectionListener(socket) {
   socket.on('ackPush', function (data) {
     if (!data || !data.id) return;
 
-    let msgKey = config.redis_push_msg_id_prefix + data.id;
+    let msgKey = redis_p_m_i + data.id;
     _redis.hmget(msgKey, ['namespace', 'room'], function (err, result) {
       if (err) return;
 
@@ -92,7 +96,7 @@ async function connectionListener(socket) {
 
       let platform = socket.handshake.platform;
       if (platform == 'android' || platform == 'ios' || platform == 'web') {
-        let ackKey = PUSH_ACK_SET_PREFIX + platform + '_{' + result[0] + '_' + result[1] + '}_' + data.id;
+        let ackKey = redis_p_a_s + platform + '_{' + result[0] + '_' + result[1] + '}_' + data.id;
         _redis.sadd(ackKey, socket.id, function (err, result) {
           if (err) return;
 
@@ -215,7 +219,7 @@ function joinOrleaveRoomFn(socket, rooms, isAdd, callback) {
 /* 更新用户和设备信息 */
 async function updateClientInfo(socket) {
   let hour = Math.floor(Date.now() / (3600 * 1000));
-  let client_hash_id = config.redis_client_hash_prefix + socket.id;
+  let client_hash_id = redis_c_h + socket.id;
   let client = {
     userid: socket.handshake.userid,
     last_connect_time: Date.now()
@@ -227,18 +231,18 @@ async function updateClientInfo(socket) {
   }
 
   await _redis.hmset(client_hash_id, client);
-  await _redis.zadd(config.redis_total_client_sort_set_prefix + socket.nsp.name, hour, socket.id);
+  await _redis.zadd(redis_t_c_s_s + socket.nsp.name, hour, socket.id);
 }
 
 
 async function offlineMessage(socket) {
-  let msgIdList = await _redis.lrange(config.redis_android_unread_message_list + socket.id, 0, config.android_unread_message_list_max_limit - 1);
+  let msgIdList = await _redis.lrange(redis_a_u_m_l + socket.id, 0, config.android_unread_message_list_max_limit - 1);
 
   if (!msgIdList || (Array.isArray(msgIdList) && msgIdList.length <= 0)) return;
 
   let redisMulti = _redis.multi();
   for (let i = 0; i < msgIdList.length; i++) {
-    redisMulti = redisMulti.hgetall(config.redis_push_msg_id_prefix + msgIdList[i]);
+    redisMulti = redisMulti.hgetall(redis_p_m_i + msgIdList[i]);
   }
 
   let multiResult = await redisMulti.exec();
@@ -250,7 +254,7 @@ async function offlineMessage(socket) {
     msgList.push(msg);
   }
 
-  await _redis.del(config.redis_android_unread_message_list + socket.id);
+  await _redis.del(redis_a_u_m_l + socket.id);
 
   socket.emit('offlineMessage', msgList);
 }

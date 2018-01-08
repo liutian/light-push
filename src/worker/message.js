@@ -18,6 +18,14 @@ const redisFactory = require('../util/redis-factory');
 const namespace = require('../base/namespace');
 
 
+const redis_p_m_t_l = config.redis_push_message_temp_list_prefix;
+const redis_p_m_i = config.redis_push_msg_id_prefix;
+const redis_c_h = config.redis_client_hash_prefix;
+const redis_t_a_r_c_s = config.redis_total_android_room_client_set_prefix;
+const redis_p_a_s = config.redis_push_ack_set_prefix;
+const redis_a_u_m_l = config.redis_android_unread_message_list;
+const redis_t_i_r_c_s = config.redis_total_ios_room_client_set_prefix;
+
 const logger = log4js.getLogger('worker_message');
 const _redis = redisFactory.getInstance(true);
 const apnProviders = {};
@@ -74,7 +82,7 @@ function createApnProvider(apns) {
 
 
 function postMessage() {
-  _redis.brpop(config.redis_push_message_temp_list_prefix, 0, function (err, result) {
+  _redis.brpop(redis_p_m_t_l, 0, function (err, result) {
     if (err) {
       logger.error('run message worker error: ' + e);
       postMessage();
@@ -93,7 +101,7 @@ function postMessage() {
 }
 
 async function _postMessage(msgId) {
-  let msg = await _redis.hgetall(config.redis_push_msg_id_prefix + msgId);
+  let msg = await _redis.hgetall(redis_p_m_i + msgId);
   if (!msg || !msg.pushData) {
     return;
   }
@@ -105,13 +113,13 @@ async function _postMessage(msgId) {
   }
   let nspAndRoom = msg.namespace + '_' + msg.room;
 
-  let androidAckKey = config.redis_push_ack_set_prefix + 'android_{' + nspAndRoom + '}_' + msgId;
-  let androidClientList = await _redis.sdiff(config.redis_total_android_room_client_set_prefix + '{' + nspAndRoom + '}', androidAckKey);
+  let androidAckKey = redis_p_a_s + 'android_{' + nspAndRoom + '}_' + msgId;
+  let androidClientList = await _redis.sdiff(redis_t_a_r_c_s + '{' + nspAndRoom + '}', androidAckKey);
   for (let j = 0; j < androidClientList.length; j++) {
     let clientId = androidClientList[j];
-    let androidClient = await _redis.hgetall(config.redis_client_hash_prefix + clientId);
+    let androidClient = await _redis.hgetall(redis_c_h + clientId);
     if (androidClient.leaveMessage == 'false') break;
-    let unreadKey = config.redis_android_unread_message_list + androidClientList[j];
+    let unreadKey = redis_a_u_m_l + androidClientList[j];
     await _redis.multi().lpush(unreadKey, msgId)
       .ltrim(unreadKey, 0, config.android_unread_message_list_max_limit - 1)
     expire(unreadKey, config.push_message_h_expire * 3600).exec();
@@ -134,19 +142,19 @@ async function postForIOS(msg) {
       apnProvider = apnProviders['/-default'];
       apnsResult += 'apnsEnv:' + apnsConfig.apns_env + '  ';
     } else {
-      return await _redis.hmset(config.redis_push_msg_id_prefix + msg.id, { result: 'no default apns' });
+      return await _redis.hmset(redis_p_m_i + msg.id, { result: 'no default apns' });
     }
   } else if (nspConfig && msg.apnsName && nspConfig.apnsObj[msg.apnsName]) {
     apnsConfig = nspConfig.apnsObj[msg.apnsName];
     apnProvider = apnProviders[msg.namespace + '-' + msg.apnsName];
     apnsResult += 'apnsEnv:' + apnsConfig.apns_env + '  ';
   } else {
-    return await _redis.hmset(config.redis_push_msg_id_prefix + msg.id, { result: 'apnsName:' + msg.apnsName + ' not exists' });
+    return await _redis.hmset(redis_p_m_i + msg.id, { result: 'apnsName:' + msg.apnsName + ' not exists' });
   }
 
   if (!apnProvider) {
     logger.error('no apns provider namespace: ' + msg.namespace + '  apnsName:' + msg.apnsName);
-    return await _redis.hmset(config.redis_push_msg_id_prefix + msg.id, { result: 'apnProvider not exists' });
+    return await _redis.hmset(redis_p_m_i + msg.id, { result: 'apnProvider not exists' });
   }
 
   let apsPayload = msg.pushData.apsData;
@@ -160,12 +168,12 @@ async function postForIOS(msg) {
     apsPayload.aps.alert = config.apns_aps_alert;
   }
 
-  let iosAckKey = config.redis_push_ack_set_prefix + 'ios_{' + nspAndRoom + '}_' + msg.id;
-  let iosClientList = await _redis.sdiff(config.redis_total_ios_room_client_set_prefix + '{' + nspAndRoom + '}', iosAckKey);
+  let iosAckKey = redis_p_a_s + 'ios_{' + nspAndRoom + '}_' + msg.id;
+  let iosClientList = await _redis.sdiff(redis_t_i_r_c_s + '{' + nspAndRoom + '}', iosAckKey);
   let apnsCount = apnsSuccessCount = 0;
   for (var i = 0; i < iosClientList.length; i++) {
     let clientId = iosClientList[i];
-    let iosClient = await _redis.hgetall(config.redis_client_hash_prefix + clientId);
+    let iosClient = await _redis.hgetall(redis_c_h + clientId);
 
     if (iosClient.leaveMessage == 'false') {
       apnsResult += resultSeparator + 'clientId:' + clientId + ' leaveMessage is false';
@@ -214,7 +222,7 @@ async function postForIOS(msg) {
     }
   }
 
-  await _redis.hmset(config.redis_push_msg_id_prefix + msg.id, { apnsCount: apnsCount, apnsSuccessCount: apnsSuccessCount, result: apnsResult });
+  await _redis.hmset(redis_p_m_i + msg.id, { apnsCount: apnsCount, apnsSuccessCount: apnsSuccessCount, result: apnsResult });
 
 }
 
@@ -225,7 +233,7 @@ async function sendMsgToApnsCatch(e, clientId) {
 
   if (e.status == 410 || reason == 'BadDeviceToken' || reason == 'DeviceTokenNotForTopic' || reason == 'Unregistered') {
     logger.error('del device_token client id: ' + clientId);
-    await _redis.hdel(config.redis_client_hash_prefix + clientId, ['device_token']);
+    await _redis.hdel(redis_c_h + clientId, ['device_token']);
     //后续添加清除iOS设备的操作
   }
 

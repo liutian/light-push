@@ -12,26 +12,27 @@ const apiError = require('../util/api-error');
 
 const logger = log4js.getLogger('home-adapter');
 
-const CLIENT_SET_PREFIX = config.redis_client_set_prefix;
-const TOTAL_CLIENT_SET_PREFIX = config.redis_total_client_set_prefix;
-const USER_SET_PREFIX = config.redis_user_set_prefix;
-const TOTAL_ALL_ROOM_SET_PREFIX = config.redis_total_all_room_set_prefix;
-const TOTAL_CLIENT_ALL_ROOM_SET_PREFIX = config.redis_total_client_all_room_set_prefix;
-const ROOM_SET_PREFIX = config.redis_room_set_prefix;
-const USER_ROOM_SET_PREFIX = config.redis_user_room_set_prefix;
-const ROOM_USER_SET_PREFIX = config.redis_room_user_set_prefix;
-const ROOM_CLIENT_SET_PREFIX = config.redis_room_client_set_prefix;
-const TOTAL_ROOM_CLIENT_SET_PREFIX = config.redis_total_room_client_set_prefix;
-
-const TOTAL_IOS_ROOM_CLIENT_SET_PREFIX = config.redis_total_ios_room_client_set_prefix;
-const IOS_ROOM_CLIENT_SET_PREFIX = config.redis_ios_room_client_set_prefix;
-const TOTAL_ANDROID_ROOM_CLIENT_SET_PREFIX = config.redis_total_android_room_client_set_prefix;
-const ANDROID_ROOM_CLIENT_SET_PREFIX = config.redis_android_room_client_set_prefix;
+const redis_c_s = config.redis_client_set_prefix;
+const redis_t_c_s = config.redis_total_client_set_prefix;
+const redis_u_s = config.redis_user_set_prefix;
+const redis_t_a_r_s = config.redis_total_all_room_set_prefix;
+const redis_t_c_a_r_s = config.redis_total_client_all_room_set_prefix;
+const redis_r_s = config.redis_room_set_prefix;
+const redis_u_r_s = config.redis_user_room_set_prefix;
+const redis_r_u_s = config.redis_room_user_set_prefix;
+const redis_r_c_s = config.redis_room_client_set_prefix;
+const redis_t_r_c_s = config.redis_total_room_client_set_prefix;
+const redis_t_i_r_c_s = config.redis_total_ios_room_client_set_prefix;
+const redis_i_r_c_s = config.redis_ios_room_client_set_prefix;
+const redis_t_a_r_c_s = config.redis_total_android_room_client_set_prefix;
+const redis_a_r_c_s = config.redis_android_room_client_set_prefix;
+const redis_c_h = config.redis_client_hash_prefix;
+const redis_p_m_i = config.redis_push_msg_id_prefix;
+const redis_h_b_c = config.redis_home_broadcast_channel;
 
 const USER_ROOM_PREFIX_REG = new RegExp('^' + config.user_room_prefix, 'i');//判断是否是用户类型的房间
 const ROOM_PREFIX_REG = new RegExp('^' + config.room_prefix, 'i');//房间统一当前缀
 
-const broadcast_prefix = config.redis_home_broadcast_channel;
 
 const pub = redisFactory.getInstance();
 const sub = redisFactory.getInstance();
@@ -52,7 +53,7 @@ function Adapter(nsp) {
   this.encoder = new parser.Encoder();
   let self = this;
 
-  let channel = broadcast_prefix + '_' + nsp.name;
+  let channel = redis_h_b_c + '_' + nsp.name;
   if (nsp.name && nsp.name != '/' && !self.channels[channel]) {//不订阅初始作用域
     sub.subscribe(channel, function (err) {
       if (err) {
@@ -160,8 +161,8 @@ async function add(self, socket, room) {
   if (mapId === undefined) {
     mapId = new Map();
     self.sids.set(socket.id, mapId);
-    await redis_db.sadd(CLIENT_SET_PREFIX + nspName, socket.id);
-    await redis_db.sadd(TOTAL_CLIENT_SET_PREFIX + nspName, socket.id);
+    await redis_db.sadd(redis_c_s + nspName, socket.id);
+    await redis_db.sadd(redis_t_c_s + nspName, socket.id);
   }
 
   //单个房间下有多少个客户端
@@ -170,32 +171,32 @@ async function add(self, socket, room) {
     mapRoom = new Map();
     self.rooms.set(room, mapRoom);
     if (isUserRoom) {
-      await redis_db.sadd(USER_SET_PREFIX + nspName, userName);
+      await redis_db.sadd(redis_u_s + nspName, userName);
     } else {
-      await redis_db.sadd(ROOM_SET_PREFIX + nspName, room);
+      await redis_db.sadd(redis_r_s + nspName, room);
     }
-    await redis_db.sadd(TOTAL_ALL_ROOM_SET_PREFIX + nspName, room);
-    await redis_db.sadd(TOTAL_CLIENT_ALL_ROOM_SET_PREFIX + socket.id, room);
+    await redis_db.sadd(redis_t_a_r_s + nspName, room);
+    await redis_db.sadd(redis_t_c_a_r_s + socket.id, room);
   }
 
   let redisMulti = redis_db.multi();
   let nspAndRoom = nspName + '_' + room;
-  redisMulti = redisMulti.sadd(ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}', socket.id)
-    .sadd(TOTAL_ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}', socket.id);
+  redisMulti = redisMulti.sadd(redis_r_c_s + '{' + nspAndRoom + '}', socket.id)
+    .sadd(redis_t_r_c_s + '{' + nspAndRoom + '}', socket.id);
 
   if (socket.handshake.platform == 'ios') {
-    redisMulti = redisMulti.sadd(IOS_ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}', socket.id)
-      .sadd(TOTAL_IOS_ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}', socket.id);
+    redisMulti = redisMulti.sadd(redis_i_r_c_s + '{' + nspAndRoom + '}', socket.id)
+      .sadd(redis_t_i_r_c_s + '{' + nspAndRoom + '}', socket.id);
   } else if (socket.handshake.platform == 'android') {
-    redisMulti = redisMulti.sadd(ANDROID_ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}', socket.id)
-      .sadd(TOTAL_ANDROID_ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}', socket.id);
+    redisMulti = redisMulti.sadd(redis_a_r_c_s + '{' + nspAndRoom + '}', socket.id)
+      .sadd(redis_t_a_r_c_s + '{' + nspAndRoom + '}', socket.id);
   }
 
   await redisMulti.exec();
 
   if (!isUserRoom) {
-    await redis_db.sadd(ROOM_USER_SET_PREFIX + nspAndRoom, userName);
-    await redis_db.sadd(USER_ROOM_SET_PREFIX + nspName + '_' + userName, room);
+    await redis_db.sadd(redis_r_u_s + nspAndRoom, userName);
+    await redis_db.sadd(redis_u_r_s + nspName + '_' + userName, room);
   }
 
 
@@ -263,18 +264,18 @@ async function del(self, socket, room) {
     mapId.delete(room);
     if (mapId.size === 0) {
       self.sids.delete(socket.id);
-      await redis_db.srem(CLIENT_SET_PREFIX + nspName, socket.id);
+      await redis_db.srem(redis_c_s + nspName, socket.id);
     }
   }
 
   let redisMulti = redis_db.multi();
   let nspAndRoom = nspName + '_' + room;
 
-  redisMulti = redisMulti.srem(ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}', socket.id);
+  redisMulti = redisMulti.srem(redis_r_c_s + '{' + nspAndRoom + '}', socket.id);
   if (socket.handshake.platform == 'ios') {
-    redisMulti = redisMulti.srem(IOS_ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}', socket.id);
+    redisMulti = redisMulti.srem(redis_i_r_c_s + '{' + nspAndRoom + '}', socket.id);
   } else if (socket.handshake.platform == 'android') {
-    redisMulti = redisMulti.srem(ANDROID_ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}', socket.id);
+    redisMulti = redisMulti.srem(redis_a_r_c_s + '{' + nspAndRoom + '}', socket.id);
   }
   await redisMulti.exec();
 
@@ -343,11 +344,11 @@ async function delAll(self, socket) {
 
       let redisMulti = redis_db.multi();
       let nspAndRoom = nspName + '_' + room;
-      redisMulti = redisMulti.srem(ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}', socket.id);
+      redisMulti = redisMulti.srem(redis_r_c_s + '{' + nspAndRoom + '}', socket.id);
       if (socket.handshake.platform == 'ios') {
-        redisMulti = redisMulti.srem(IOS_ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}', socket.id);
+        redisMulti = redisMulti.srem(redis_i_r_c_s + '{' + nspAndRoom + '}', socket.id);
       } else if (socket.handshake.platform == 'android') {
-        redisMulti = redisMulti.srem(ANDROID_ROOM_CLIENT_SET_PREFIX + '{' + nspAndRoom + '}', socket.id);
+        redisMulti = redisMulti.srem(redis_a_r_c_s + '{' + nspAndRoom + '}', socket.id);
       }
 
       try {
@@ -359,8 +360,8 @@ async function delAll(self, socket) {
   }
 
 
-  await redis_db.srem(CLIENT_SET_PREFIX + nspName, socket.id);
-  await redis_db.hmset(config.redis_client_hash_prefix + socket.id, {
+  await redis_db.srem(redis_c_s + nspName, socket.id);
+  await redis_db.hmset(redis_c_h + socket.id, {
     last_disconnect_time: Date.now(),
     disconnect_reason: 'network'
   });
@@ -505,7 +506,7 @@ Adapter.prototype.broadcast = async function (packet, opts) {
       }
 
       if (packet.data[0] == 'push' && packet.data[1].id) {
-        redis_db.hincrby(config.redis_push_msg_id_prefix + packet.data[1].id, 'onlineClientCount', onlineClientCount, function (err) {
+        redis_db.hincrby(redis_p_m_i + packet.data[1].id, 'onlineClientCount', onlineClientCount, function (err) {
           err && logger.error(' message: ' + packet.data[1].id + ' hincrby onlineClientCount error ' + err);
         });
       }
@@ -517,23 +518,23 @@ Adapter.prototype.broadcast = async function (packet, opts) {
 async function deleteRoom(self, room) {
   let nspName = self.nsp.name;
 
-  let clientCount = await redis_db.scard(ROOM_CLIENT_SET_PREFIX + '{' + nspName + '_' + room + '}');
+  let clientCount = await redis_db.scard(redis_r_c_s + '{' + nspName + '_' + room + '}');
 
   if (clientCount > 0) return;
 
   if (!USER_ROOM_PREFIX_REG.test(room)) {
-    await redis_db.srem(ROOM_SET_PREFIX + nspName, room);
+    await redis_db.srem(redis_r_s + nspName, room);
   } else {
     let userName = room.replace(USER_ROOM_PREFIX_REG, '');
 
-    let rooms = await redis_db.smembers(USER_ROOM_SET_PREFIX + nspName + '_' + userName);
+    let rooms = await redis_db.smembers(redis_u_r_s + nspName + '_' + userName);
 
     for (let i = 0; i < rooms.length; i++) {
-      await redis_db.srem(ROOM_USER_SET_PREFIX + nspName + '_' + rooms[i], userName);
+      await redis_db.srem(redis_r_u_s + nspName + '_' + rooms[i], userName);
     }
 
-    await redis_db.del(USER_ROOM_SET_PREFIX + nspName + '_' + userName);
-    await redis_db.srem(USER_SET_PREFIX + nspName, userName);
+    await redis_db.del(redis_u_r_s + nspName + '_' + userName);
+    await redis_db.srem(redis_u_s + nspName, userName);
 
   }
 }

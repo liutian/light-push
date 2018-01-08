@@ -8,10 +8,12 @@ const _util = require('../util/util');
 
 const logger = log4js.getLogger('push');
 
-const PUSH_MSG_ID_PREFIX = config.redis_push_msg_id_prefix;
-const PUSH_MESSAGE_LIST_PREFIX = config.redis_push_message_list_prefix;
-const PUSH_ACK_SET_PREFIX = config.redis_push_ack_set_prefix;
-const PUSH_MSG_UUID = config.redis_push_msg_uuid;
+const redis_p_m_i = config.redis_push_msg_id_prefix;
+const redis_p_m_l = config.redis_push_message_list_prefix;
+const redis_p_a_s = config.redis_push_ack_set_prefix;
+const redis_p_m_u = config.redis_push_msg_uuid;
+const redis_p_m_t_l = config.redis_push_message_temp_list_prefix;
+const redis_h_b_c = config.redis_home_broadcast_channel;
 const pushKList = 'namespace room except pushData apnsName leaveMessage extra from';
 
 const _redis = redisFactory.getInstance(true);
@@ -65,27 +67,27 @@ async function pushFn(data) {
 
   //初始化数据
   let nspAndRoom = data.namespace + '_' + data.room;
-  let hsetKey = await _redis.incr(PUSH_MSG_UUID);
+  let hsetKey = await _redis.incr(redis_p_m_u);
   data.id = hsetKey;
   data.sendDate = Date.now();
   data.ackCount = data.ackIOSCount = data.ackAndroidCount = data.onlineClientCount = 0;
 
   //存储消息
-  await _redis.multi().hmset(PUSH_MSG_ID_PREFIX + hsetKey, Object.assign({}, data, { pushData: JSON.stringify(data.pushData) }))
-    .expire(PUSH_MSG_ID_PREFIX + hsetKey, config.push_message_h_expire * 3600).exec();
+  await _redis.multi().hmset(redis_p_m_i + hsetKey, Object.assign({}, data, { pushData: JSON.stringify(data.pushData) }))
+    .expire(redis_p_m_i + hsetKey, config.push_message_h_expire * 3600).exec();
   //存储消息ID到系统消息ID列表中
-  await _redis.multi().lpush(PUSH_MESSAGE_LIST_PREFIX + data.namespace, hsetKey).ltrim(PUSH_MESSAGE_LIST_PREFIX + data.namespace, 0, config.push_message_list_max_limit - 1).exec();
+  await _redis.multi().lpush(redis_p_m_l + data.namespace, hsetKey).ltrim(redis_p_m_l + data.namespace, 0, config.push_message_list_max_limit - 1).exec();
   //初始化确认消息回执的客户的集合
-  let androidAckKey = PUSH_ACK_SET_PREFIX + 'android_{' + nspAndRoom + '}_' + hsetKey;
+  let androidAckKey = redis_p_a_s + 'android_{' + nspAndRoom + '}_' + hsetKey;
   await _redis.multi().sadd(androidAckKey, '__ack').expire(androidAckKey, config.push_message_h_expire * 3600).exec();
-  let iosAckKey = PUSH_ACK_SET_PREFIX + 'ios_{' + nspAndRoom + '}_' + hsetKey;
+  let iosAckKey = redis_p_a_s + 'ios_{' + nspAndRoom + '}_' + hsetKey;
   await _redis.multi().sadd(iosAckKey, '__ack').expire(iosAckKey, config.push_message_h_expire * 3600).exec();
-  let webAckKey = PUSH_ACK_SET_PREFIX + 'web_{' + nspAndRoom + '}_' + hsetKey;
+  let webAckKey = redis_p_a_s + 'web_{' + nspAndRoom + '}_' + hsetKey;
   await _redis.multi().sadd(webAckKey, '__ack').expire(webAckKey, config.push_message_h_expire * 3600).exec();
   //将推送消息放到消息队列中
   if (data.leaveMessage) {
     setTimeout(function () {
-      _redis.lpush(config.redis_push_message_temp_list_prefix, hsetKey, function (err) {
+      _redis.lpush(redis_p_m_t_l, hsetKey, function (err) {
         if (err) {
           logger.error('push message temp list err ' + err);
         }
@@ -98,7 +100,7 @@ async function pushFn(data) {
     //发布redis推送订阅频道
     let publishData = config.emit_msg_pick_key ? _util.pick(data, 'id namespace room pushData sendDate ') : data;
     delete publishData.pushData.apsData;
-    let chn = config.redis_home_broadcast_channel + '_' + data.namespace;
+    let chn = redis_h_b_c + '_' + data.namespace;
     let msg = JSON.stringify([publishData, {
       rooms: [data.room],
       except: data.except

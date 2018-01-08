@@ -8,7 +8,11 @@ const namespace = require('../base/namespace');
 
 const logger = log4js.getLogger('logic_transfer');
 
-const TRANSFER = config.redis_room_transfer_channel;
+const redis_r_t_c = config.redis_room_transfer_channel;
+const redis_t_r_c_s = config.redis_total_room_client_set_prefix;
+const redis_t_i_r_c_s = config.redis_total_ios_room_client_set_prefix;
+const redis_t_a_r_c_s = config.redis_total_android_room_client_set_prefix;
+
 //创建专门通道
 const redis_pub = redisFactory.getInstance();
 const _redis = redisFactory.getInstance(true);
@@ -52,27 +56,27 @@ async function transferFn(data) {
   let nspAndRoom = data.namespace + '_' + data.targetRoom;
 
   let allList = await _redis.sunion(data.sourceRooms.map(function (item) {
-    return config.redis_total_room_client_set_prefix + '{' + data.namespace + '_' + item + '}';
+    return redis_t_r_c_s + '{' + data.namespace + '_' + item + '}';
   }));
   if (Array.isArray(allList) && allList.length > 0) {
-    await _redis[data.type == 'join' ? 'sadd' : 'srem'](config.redis_total_room_client_set_prefix + '{' + nspAndRoom + '}', allList);
+    await _redis[data.type == 'join' ? 'sadd' : 'srem'](redis_t_r_c_s + '{' + nspAndRoom + '}', allList);
   }
 
   let iosList = await _redis.sunion(data.sourceRooms.map(function (item) {
-    return config.redis_total_ios_room_client_set_prefix + '{' + data.namespace + '_' + item + '}';
+    return redis_t_i_r_c_s + '{' + data.namespace + '_' + item + '}';
   }));
   if (Array.isArray(iosList) && iosList.length > 0) {
-    await _redis[data.type == 'join' ? 'sadd' : 'srem'](config.redis_total_ios_room_client_set_prefix + '{' + nspAndRoom + '}', iosList);
+    await _redis[data.type == 'join' ? 'sadd' : 'srem'](redis_t_i_r_c_s + '{' + nspAndRoom + '}', iosList);
   }
 
   let androidList = await _redis.sunion(data.sourceRooms.map(function (item) {
-    return config.redis_total_android_room_client_set_prefix + '{' + data.namespace + '_' + item + '}';
+    return redis_t_a_r_c_s + '{' + data.namespace + '_' + item + '}';
   }));
   if (Array.isArray(androidList) && androidList.length > 0) {
-    await _redis[data.type == 'join' ? 'sadd' : 'srem'](config.redis_total_android_room_client_set_prefix + '{' + nspAndRoom + '}', androidList);
+    await _redis[data.type == 'join' ? 'sadd' : 'srem'](redis_t_a_r_c_s + '{' + nspAndRoom + '}', androidList);
   }
 
-  redis_pub.publish(TRANSFER, JSON.stringify(data));
+  redis_pub.publish(redis_r_t_c, JSON.stringify(data));
 
 }
 
