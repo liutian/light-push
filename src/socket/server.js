@@ -27,6 +27,8 @@ exports.joinOrleaveRoom = joinOrleaveRoomFn;
 async function connectionListener(socket) {
   //不在处理主命名空间下的事件处理
   if (socket.nsp.name == '/') return;
+  //最后一次推送的时间，限制
+  socket._lastPushTime = Date.now() - config.client_push_interval * 1000;
 
 
   //更新用户和设备信息
@@ -154,6 +156,13 @@ async function connectionListener(socket) {
 
   // 客户端主动推送消息，艰难的决定，从一开始就告诉自己绝不能开这个接口否则出问题排查起来很困难，但是没办法迫于业务的压力
   socket.on('push', function (data, callback) {
+    let now = Date.now();
+    if(now - socket._lastPushTime < config.client_push_interval * 1000){
+      callback({ status: 500, msg: `limited access in ${config.client_push_interval}s` });
+      return;
+    }
+
+    socket._lastPushTime = now;
     let d = Object.assign({
       namespace: socket.nsp.name,
       except: socket.id,
