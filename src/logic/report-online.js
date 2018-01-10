@@ -28,6 +28,7 @@ async function onlineFn(data) {
   //解析参数
   data = _util.pick(data || {}, 'namespace room detail');
 
+  //统计全平台信息
   if (!data.namespace) {
     let roomCount = userCount = clientCount = 0;
     let nsTotal = await _redis.zcount(redis_n_k_z, '-inf', '+inf');

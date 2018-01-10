@@ -110,6 +110,8 @@ Adapter.prototype.addAll = async function (socket, rooms, fn) {
   if (socket.nsp.name == '/') {
     fn && fn();
     return;
+  } else if (socket.disconnected) {
+    apiError.throw('client id: ' + socket.id + ' disconnected ');
   }
 
   let roomList = [];
@@ -128,14 +130,36 @@ Adapter.prototype.addAll = async function (socket, rooms, fn) {
     roomList.push(room);
   }
 
+  let redisMulti = redis_db.multi();
   for (let i = 0; i < roomList.length; i++) {
     let room = roomList[i];
     try {
-      await add(this, socket, room);
-      fn && fn(null);
+      redisMulti = await _add(this, socket, room, redisMulti);
     } catch (e) {
       logger.error('id: ' + socket.id + ' join room: ' + room + ' fail \n' + e);
-      fn && fn(e);
+    }
+  }
+
+  try {
+    await redisMulti.exec();
+    fn && fn(null);
+  }catch(e){
+    logger.error('id: ' + socket.id + ' join room list fail \n' + e);
+    fn && fn(e);
+  }
+
+  //是否需要将该行为广播到房间中
+  if (config.room_activity_broadcast && socket.handshake.query.activityBroadcast) {
+    for (let i = 0; i < roomList.length; i++) {
+      let room = roomList[i];
+      this.nsp.in(room);
+      this.nsp.except = [socket.id];
+      this.nsp.emit('peopleJoin', {
+        sid: socket.id,
+        uuid: socket.handshake.query.uuid,
+        userid: socket.handshake.query.userid,
+        room: room
+      });
     }
   }
 }
@@ -146,12 +170,7 @@ Adapter.prototype.addAll = async function (socket, rooms, fn) {
  * @param socket
  * @param room
  */
-async function add(self, socket, room) {
-  if (socket.disconnected) {
-    apiError.throw('client id: ' + socket.id + ' disconnected ');
-  }
-
-
+async function _add(self, socket, room, redisMulti) {
   let nspName = self.nsp.name;
   let userName = socket.handshake.userid;
   let isUserRoom = USER_ROOM_PREFIX_REG.test(room) && room.replace(USER_ROOM_PREFIX_REG, '') == userName;
@@ -161,8 +180,8 @@ async function add(self, socket, room) {
   if (mapId === undefined) {
     mapId = new Map();
     self.sids.set(socket.id, mapId);
-    await redis_db.sadd(redis_c_s + nspName, socket.id);
-    await redis_db.sadd(redis_t_c_s + nspName, socket.id);
+    redisMulti = redisMulti.sadd(redis_c_s + nspName, socket.id);
+    redisMulti = redisMulti.sadd(redis_t_c_s + nspName, socket.id);
   }
 
   //单个房间下有多少个客户端
@@ -171,15 +190,15 @@ async function add(self, socket, room) {
     mapRoom = new Map();
     self.rooms.set(room, mapRoom);
     if (isUserRoom) {
-      await redis_db.sadd(redis_u_s + nspName, userName);
+      redisMulti = redisMulti.sadd(redis_u_s + nspName, userName);
     } else {
-      await redis_db.sadd(redis_r_s + nspName, room);
+      redisMulti = redisMulti.sadd(redis_r_s + nspName, room);
     }
-    await redis_db.sadd(redis_t_a_r_s + nspName, room);
-    await redis_db.sadd(redis_t_c_a_r_s + socket.id, room);
+    redisMulti = redisMulti.sadd(redis_t_a_r_s + nspName, room);
+    redisMulti = redisMulti.sadd(redis_t_c_a_r_s + socket.id, room);
   }
 
-  let redisMulti = redis_db.multi();
+  
   let nspAndRoom = nspName + '_' + room;
   redisMulti = redisMulti.sadd(redis_r_c_s + '{' + nspAndRoom + '}', socket.id)
     .sadd(redis_t_r_c_s + '{' + nspAndRoom + '}', socket.id);
@@ -192,28 +211,15 @@ async function add(self, socket, room) {
       .sadd(redis_t_a_r_c_s + '{' + nspAndRoom + '}', socket.id);
   }
 
-  await redisMulti.exec();
-
   if (!isUserRoom) {
-    await redis_db.sadd(redis_r_u_s + nspAndRoom, userName);
-    await redis_db.sadd(redis_u_r_s + nspName + '_' + userName, room);
+    redisMulti = redisMulti.sadd(redis_r_u_s + nspAndRoom, userName);
+    redisMulti = redisMulti.sadd(redis_u_r_s + nspName + '_' + userName, room);
   }
-
 
   mapId.set(room, mapRoom);
   mapRoom.set(socket.id, mapId);
 
-  //是否需要将该行为广播到房间中
-  if (config.room_activity_broadcast && socket.handshake.query.activityBroadcast) {
-    self.nsp.in(room);
-    self.nsp.except = [socket.id];
-    self.nsp.emit('peopleJoin', {
-      sid: socket.id,
-      uuid: socket.handshake.query.uuid,
-      userid: socket.handshake.query.userid,
-      room: room
-    });
-  }
+  return redisMulti;
 };
 
 /**
@@ -235,9 +241,8 @@ Adapter.prototype.del = async function (socket, room, fn) {
   } else {
     room = room.replace(ROOM_PREFIX_REG, '');
     try {
-      await del(this, socket, room);
+      await _del(this, socket, room);
       fn && fn(null);
-
     } catch (e) {
       logger.error('id: ' + socket.id + ' leave room: ' + room + ' fail \n' + e);
       fn && fn(e);
@@ -252,43 +257,50 @@ Adapter.prototype.del = async function (socket, room, fn) {
  * @param socket
  * @param room
  */
-async function del(self, socket, room) {
-  if (socket.disconnected) {
-    apiError.throw('client id: ' + socket.id + ' disconnected ');
-  }
-
-  let unsubscribe = false;//保留这个变量可能以后还有用
+async function _del(self, socket, room) {
   let nspName = self.nsp.name;
   let mapId = self.sids.get(socket.id);
+  //从内存中移除房间
   if (mapId !== undefined) {
     mapId.delete(room);
-    if (mapId.size === 0) {
-      self.sids.delete(socket.id);
-      await redis_db.srem(redis_c_s + nspName, socket.id);
-    }
+  }
+  //如果当前连接没有任何房间，直接清除连接下的所有信息
+  if (mapId === undefined || mapId.size <= 0) {
+    await delAll(this, socket);
+    return;
+  }
+
+  //从内存中移除客户端
+  let mapRoom = self.rooms.get(room);
+  if(mapRoom !== undefined){
+    mapRoom.delete(socket.id);
   }
 
   let redisMulti = redis_db.multi();
   let nspAndRoom = nspName + '_' + room;
-
+  //把当前客户端从房间中移除
   redisMulti = redisMulti.srem(redis_r_c_s + '{' + nspAndRoom + '}', socket.id);
   if (socket.handshake.platform == 'ios') {
     redisMulti = redisMulti.srem(redis_i_r_c_s + '{' + nspAndRoom + '}', socket.id);
   } else if (socket.handshake.platform == 'android') {
     redisMulti = redisMulti.srem(redis_a_r_c_s + '{' + nspAndRoom + '}', socket.id);
   }
-  await redisMulti.exec();
 
-  let mapRoom = self.rooms.get(room);
-  if (mapRoom !== undefined) {
-    mapRoom.delete(socket.id);
-    if (mapRoom.size === 0) {
-      self.rooms.delete(room);
-      unsubscribe = true;
-      await deleteRoom(self, room);
-    }
+  try{
+    await redisMulti.exec();
+  }catch(e){
+    logger.error('del error ' + e);
   }
 
+  //移除空房间
+  if (mapRoom === undefined || mapRoom.size <= 0) {
+    self.rooms.delete(room);
+    await deleteRoom(self, room);
+  } else {
+    logger.warn(`room: ${room} don't have to clear because clientCount: ${mapRoom.size}`);
+  }
+
+  //广播下线通知
   if (config.room_activity_broadcast && socket.handshake.query.activityBroadcast) {
     self.nsp.in(room);
     self.nsp.except = [socket.id];
@@ -296,7 +308,7 @@ async function del(self, socket, room) {
       sid: socket.id,
       uuid: socket.handshake.query.uuid,
       userid: socket.handshake.query.userid,
-      rooms: [room],
+      room: room,
       clientOffline: false
     });
   }
@@ -305,6 +317,8 @@ async function del(self, socket, room) {
 
 Adapter.prototype.delAll = async function (socket, fn) {
   const nspName = socket.nsp.name;
+  //如果所属命名空间数据有问题直接中断执行
+  //socket._force_disconnect 为 true 的连接为服务器强制中断的连接，这是不需要考虑命名空间的数据，强制下线
   if ((nspName == '/' || !namespace.data[nspName] || namespace.data[nspName].offline == 'on') && socket._force_disconnect !== true) {
     fn && fn();
     return;
@@ -328,21 +342,25 @@ Adapter.prototype.delAll = async function (socket, fn) {
  * @param socket
  */
 async function delAll(self, socket) {
-  let unsubscribeRooms = [];//保留这个变量可能以后还有用
   let nspName = self.nsp.name;
   let roomList = [];
 
+  let redisMulti = redis_db.multi();
   let mapId = self.sids.get(socket.id);
-  if (mapId !== undefined) {
+  //从内存中移除客户端
+  self.sids.delete(socket.id);
+  //把当前客户端从房间中移除
+  if (mapId !== undefined && mapId.size > 0) {
+
     for (let room of mapId.keys()) {
       roomList.push(room);
       let mapRoom = self.rooms.get(room);
 
+      //从内存中移除客户端
       if (mapRoom !== undefined) {
         mapRoom.delete(socket.id);
       }
-
-      let redisMulti = redis_db.multi();
+      
       let nspAndRoom = nspName + '_' + room;
       redisMulti = redisMulti.srem(redis_r_c_s + '{' + nspAndRoom + '}', socket.id);
       if (socket.handshake.platform == 'ios') {
@@ -350,50 +368,51 @@ async function delAll(self, socket) {
       } else if (socket.handshake.platform == 'android') {
         redisMulti = redisMulti.srem(redis_a_r_c_s + '{' + nspAndRoom + '}', socket.id);
       }
-
-      try {
-        await redisMulti.exec();
-      } catch (e) {
-        logger.error('delAll error ' + e);
-      }
     }
   }
 
-
-  await redis_db.srem(redis_c_s + nspName, socket.id);
-  await redis_db.hmset(redis_c_h + socket.id, {
+  //从客户端集合中移除
+  redisMulti = redisMulti.srem(redis_c_s + nspName, socket.id);
+  //更新客户端信息
+  redisMulti = redisMulti.hmset(redis_c_h + socket.id, {
     last_disconnect_time: Date.now(),
     disconnect_reason: 'network'
   });
 
-  //删除连接
-  self.sids.delete(socket.id);
-  //清除空房间
-  if (mapId !== undefined) {
-    for (let room of mapId.keys()) {
-      let mapRoom = self.rooms.get(room);
+  try {
+    await redisMulti.exec();
+  } catch (e) {
+    logger.error('delAll error ' + e);
+  }
 
-      if (mapRoom === undefined || mapRoom.size <= 0) {
-        self.rooms.delete(room);
-        unsubscribeRooms.push(room);
-        await deleteRoom(self, room);
-      }
+  //移除空房间
+  for (let i = 0; i < roomList.length; i++) {
+    let room = roomList[i];
+    let mapRoom = self.rooms.get(room);
+
+    if (mapRoom === undefined || mapRoom.size <= 0) {
+      //从内存中移除房间
+      self.rooms.delete(room);
+      await deleteRoom(self, room);
+    }else{
+      logger.warn(`room: ${room} don't have to clear because clientCount: ${mapRoom.size}`);
     }
   }
 
   //广播下线通知
   if (config.room_activity_broadcast && socket.handshake.query.activityBroadcast) {
-    roomList.forEach(function (room) {
+    for (let i = 0; i < roomList.length; i++) {
+      let room = roomList[i];
       self.nsp.in(room);
-    });
-    self.nsp.except = [socket.id];
-    self.nsp.emit('peopleLeave', {
-      sid: socket.id,
-      uuid: socket.handshake.query.uuid,
-      userid: socket.handshake.query.userid,
-      rooms: roomList,
-      clientOffline: true
-    });
+      self.nsp.except = [socket.id];
+      self.nsp.emit('peopleLeave', {
+        sid: socket.id,
+        uuid: socket.handshake.query.uuid,
+        userid: socket.handshake.query.userid,
+        room: room,
+        clientOffline: true
+      });
+    }
   }
 
   //发送下线通知到第三方服务器
@@ -518,24 +537,39 @@ Adapter.prototype.broadcast = async function (packet, opts) {
 async function deleteRoom(self, room) {
   let nspName = self.nsp.name;
 
+  // 应该通过redis的watch来保证事务的一致性，但是ioredis的watch api没有区分和隔离不同的异步上下文
   let clientCount = await redis_db.scard(redis_r_c_s + '{' + nspName + '_' + room + '}');
 
-  if (clientCount > 0) return;
+  if (clientCount > 0){
+    logger.warn(`room: ${room} don't have to clear because clientCount: ${clientCount}`);
+    return;
+  };
 
+  //普通房间，直接从房间集合中移除
   if (!USER_ROOM_PREFIX_REG.test(room)) {
     await redis_db.srem(redis_r_s + nspName, room);
-  } else {
+  } else {//用户类型的房间，清除用户相关的数据
     let userName = room.replace(USER_ROOM_PREFIX_REG, '');
 
+    //获取用户所属的房间列表
     let rooms = await redis_db.smembers(redis_u_r_s + nspName + '_' + userName);
 
+    let redisMulti = redis_db.multi();
+    //把用户从房间中移除
     for (let i = 0; i < rooms.length; i++) {
-      await redis_db.srem(redis_r_u_s + nspName + '_' + rooms[i], userName);
+      redisMulti = redisMulti.srem(redis_r_u_s + nspName + '_' + rooms[i], userName);
     }
 
-    await redis_db.del(redis_u_r_s + nspName + '_' + userName);
-    await redis_db.srem(redis_u_s + nspName, userName);
+    //清除用户所属房间列表的集合
+    redisMulti = redisMulti.del(redis_u_r_s + nspName + '_' + userName);
+    //从用户集合中将改用户移除
+    redisMulti = redisMulti.srem(redis_u_s + nspName, userName);
 
+    try {
+      await redisMulti.exec();
+    } catch (e) {
+      logger.error(`delete room:${room} error: ${e}`);
+    }
   }
 }
 

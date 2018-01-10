@@ -6,22 +6,36 @@
   <title>demo</title>
 </head>
 
+<button type="button" id="sendBtn">发送</button>
+
 <body>
 
 
-  <script src="http://127.0.0.1:21314/socket.io/socket.io.js"></script>
+  <script src="http://ipush-test.visionet.cn/push/socket.io/socket.io.js"></script>
   <script>
+
     try {
       // var uuid = window.parseInt(Math.random() * 1000000);
       // var uuid = Math.random() * 10000;
-      var uuid = 'uuid001';
-      var userid = 'user001';
-      var socket = io.connect('http://127.0.0.1:21314/demo?uuid=' + uuid + '&userid=' + userid);
+      var uuid = 'uuid002';
+      var userid = 'user002';
+      var socket = io.connect('http://ipush-test.visionet.cn/visionet.findest.com?uuid=' + uuid + '&userid=' + userid, {
+        path: '/push/socket.io/'
+      });
+
+      document.getElementById('sendBtn').addEventListener('click', () => {
+        socket.emit('push', {
+          room: 'user_user002',
+          pushData: { message: 'qqqqqq' }
+        }, (result) => {
+          console.log(result.id);
+        });
+      });
     } catch (e) {
       alert('error:' + e);
     }
     socket.on('connect', function () {
-      var rooms = ['room002'];
+      var rooms = ['room-test'];
 
       socket.emit('joinRoom', rooms, function (result) {
         console.log('joinRoom:' + JSON.stringify(result));
