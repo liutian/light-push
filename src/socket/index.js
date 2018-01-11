@@ -23,6 +23,7 @@ const server = http.Server(function (req, res) {
 }).listen(config.port, config.ip, function (err) {
   console.log('socket-io serving at ' + config.ip + ':' + config.port);
 });
+server.setMaxListeners(20);
 
 global._ipush_ioApp = io(server, {
   adapter: HomeAdapter,
