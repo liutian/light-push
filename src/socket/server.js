@@ -117,19 +117,21 @@ async function connectionListener(socket) {
 
   //设置或者获取ios客户端对哪些房间设置消息免打扰功能
   socket.on('apns', function (data, callback) {
-    if (socket.handshake.platform != 'ios') return callback({ status: 403, msg: 'Forbidden' });
+    if (socket.handshake.platform != 'ios') {
+      return callback && callback({ status: 403, msg: 'Forbidden' });
+    }
     !data && (data = {});
     data.id = socket.id;
     clientService.apns(data).then(function (result) {
       if (result) {
         result.status = _util.isNumber(result.status) ? result.status : 200;
         result.msg = result.msg || 'ok';
-        callback(result);
+        callback && callback(result);
       } else {
-        callback({ status: 200, msg: 'ok' });
+        callback && callback({ status: 200, msg: 'ok' });
       }
     }, function (err) {
-      callback({ status: err.status || 500, msg: err.msg || err.message });
+      callback && callback({ status: err.status || 500, msg: err.msg || err.message });
     });
   });
 
@@ -145,12 +147,12 @@ async function connectionListener(socket) {
       if (result) {
         result.status = _util.isNumber(result.status) ? result.status : 200;
         result.msg = result.msg || 'ok';
-        callback(result);
+        callback && callback(result);
       } else {
-        callback({ status: 200, msg: 'ok' });
+        callback && callback({ status: 200, msg: 'ok' });
       }
     }, function (err) {
-      callback({ status: err.status || 500, msg: err.msg || err.message });
+      callback && callback({ status: err.status || 500, msg: err.msg || err.message });
     });
   });
 
@@ -158,8 +160,7 @@ async function connectionListener(socket) {
   socket.on('push', function (data, callback) {
     let now = Date.now();
     if(now - socket._lastPushTime < config.client_push_interval * 1000){
-      callback({ status: 500, msg: `limited access in ${config.client_push_interval}s` });
-      return;
+      return callback && callback({ status: 500, msg: `limited access in ${config.client_push_interval}s` });
     }
 
     socket._lastPushTime = now;
@@ -170,11 +171,9 @@ async function connectionListener(socket) {
     }, data);
 
     pushService.push(d).then((result) => {
-      if (!callback) return;
-      callback(Object.assign({ status: 200, msg: 'ok' }, result));
+      callback && callback(Object.assign({ status: 200, msg: 'ok' }, result));
     }).catch((e) => {
-      if (!callback) return;
-      callback({ status: e.status || 500, msg: e.msg || e.message });
+      callback && callback({ status: e.status || 500, msg: e.msg || e.message });
     });
   });
 }
