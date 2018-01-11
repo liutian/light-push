@@ -35,6 +35,7 @@ module.exports = function (router) {
   router.post('/api/admin/namespace/clear-realtime-data', clearRealtimeData);
   router.post('/api/auth/namespace/save', nspUpdate);
   router.post('/api/admin/clear-legacy-client', clearLegacyClient);
+  router.get('/api/auth/namespace/current-message-stat', currentMessageStat);
 }
 
 
@@ -131,4 +132,8 @@ async function clearRealtimeData(ctx, next) {
 
 async function clearLegacyClient(ctx, next) {
   ctx.body = await namespaceService.clearLegacyClient(ctx.request.body.namespace);
+}
+
+async function currentMessageStat(ctx, next) {
+  ctx.body = await reportOnlineService.currentMessageStat(ctx.state.namespace);
 }

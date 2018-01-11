@@ -34,6 +34,9 @@ default: &default
   redis_client_hash_prefix: c_h_                                         #保存单个客户端的信息
   redis_android_unread_message_list: a_unread_msg_l_                     #保存每一个android设备未读的消息列表
   redis_total_client_all_room_set_prefix: t_c_all_r_s_                   #保存客户端曾经进入过的房间集合(包括用户房间)
+  redis_message_stat_minute_prefix: m_s_m_int_                           #保存每个命名空间下最近一小时内每分钟推送消息总数
+  redis_message_stat_hour_prefix: m_s_h_int_                             #保存每个命名空间下最近一天内每小时推送消息总数
+  redis_message_stat_day_prefix: m_s_d_int_                              #保存每个命名空间下最近一年内每天推送消息总数
 
   redis_namespace_key_z: nsp_z_                                          #保存命名空间的列表
   #命名空间下配置项: key,name,apns_topic,apns_host,apns_port,apns_expiration,connect_callback,disconnect_callback,auth_passwd,callback_auth
