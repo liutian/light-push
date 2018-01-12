@@ -47,7 +47,7 @@ const offlineListeners = [];
 
 const key_reg = new RegExp(config.key_reg);
 
-const redis_db = redisFactory.getInstance(true);
+const redis_db = redisFactory.getInstance(false);
 
 _redis_sub.subscribe(nspDelChannel, function (err) {
   if (err) logger.error('nsp_del subscribe channel error: ' + err);
