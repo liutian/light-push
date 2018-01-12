@@ -100,6 +100,13 @@ socket.on('connect', function(){
 - `id` : `[Number]` 推送消息的ID,递增
 - `expectAckCount` : `[Number]` 能即时收到消息的客户端总数(预测可能和实际情况有偏差)
 
+###推送消息
+客户端
+```
+socket.emit('push',{...});
+```
+请求参数同上
+
 ###客户端接收消息
 ```
 socket.on('push',function(data){
