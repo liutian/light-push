@@ -103,9 +103,9 @@ async function currentMessageStatFn(nsp) {
     apiError.throw('namespace can not be empty');
   }
 
-  result.currMinuteMessageCount = (await _redis.get(redis_m_s_m + nsp + '_' + nowDate.getMinutes())) || 0;
-  result.currHourMessageCount = (await _redis.get(redis_m_s_h + nsp + '_' + nowDate.getHours())) || 0;
-  result.currDateMessageCount = (await _redis.get(redis_m_s_d + nsp + '_' + nowDate.getDate())) || 0;
+  result.currMinuteMessageCount = (await _redis.get(redis_m_s_m + nsp + '_' + nowDate.getHours() + '_' + nowDate.getMinutes())) || 0;
+  result.currHourMessageCount = (await _redis.get(redis_m_s_h + nsp + '_' + nowDate.getDate() + '_' + nowDate.getHours())) || 0;
+  result.currDateMessageCount = (await _redis.get(redis_m_s_d + nsp + '_' + nowDate.getFullYear() + '_' + nowDate.getMonth() + '_' + nowDate.getDate())) || 0;
 
   return result;
 }

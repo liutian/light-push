@@ -122,18 +122,10 @@ async function pushFn(data) {
 }
 
 async function _updateStat(nsp, nowDate) {
-  let statKey = redis_m_s_m + nsp + '_' + nowDate.getMinutes();
+  let statKey = redis_m_s_m + nsp + '_' + nowDate.getHours() + '_' + nowDate.getMinutes();
   await _redis.multi().incr(statKey).expire(statKey, 3600).exec();
-  statKey = redis_m_s_h + nsp + '_' + nowDate.getHours();
+  statKey = redis_m_s_h + nsp + '_' + nowDate.getDate() + '_' + nowDate.getHours();
   await _redis.multi().incr(statKey).expire(statKey, 3600 * 24).exec();
-  statKey = redis_m_s_d + nsp + '_' + nowDate.getDate();
-  const nextMonthDate = new Date(nowDate.getTime());
-  if (nowDate.getMonth() === 11) {
-    nextMonthDate.setFullYear(nowDate.getFullYear() + 1);
-    nextMonthDate.setMonth(0);
-  } else {
-    nextMonthDate.setMonth(nowDate.getMonth() + 1);
-  }
-  const expireDate = (nextMonthDate.getTime() - nowDate.getTime()) / 1000;
-  await _redis.multi().incr(statKey).expire(statKey, expireDate).exec();
+  statKey = redis_m_s_d + nsp + '_' + nowDate.getFullYear() + '_' + nowDate.getMonth() + '_' + nowDate.getDate();
+  await _redis.multi().incr(statKey).expire(statKey, 3600 * 24 * 100).exec();
 }
