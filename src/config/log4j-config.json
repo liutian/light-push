@@ -3,13 +3,13 @@
     "file": {
       "type": "file",
       "filename": "log/debug.log",
-      "maxLogSize": 1048576,
+      "maxLogSize": 10485760,
       "backups": 1
     },
     "dateFile": {
       "type": "dateFile",
       "filename": "log/out.log",
-      "pattern": "-dd--hh.log"
+      "pattern": "MM-dd.log"
     }
   },
   "categories": {
