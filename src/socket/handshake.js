@@ -94,12 +94,10 @@ module.exports = function (socket, next) {
   //保证socket.id与服务器没有关系(因为原来的socket.id是服务器生成的,如果同一个客户端与不同服务器连接保证socket是同一个)
   socket.id = newId;
 
-
   //同一个命名空间下不能有两个id一样的socket
   if (socket.nsp.sockets[newId]) {
-    socket.nsp.sockets[newId].disconnect(true);
     logger.warn('socket.id conflict =====> ' + newId);
-    // return next(new Error('socket.id conflict'));
+    return next(new Error('socket.id conflict'));
   }
 
   if (!nspData.connect_callback) {
