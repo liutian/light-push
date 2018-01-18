@@ -54,3 +54,6 @@ yum install nginx
 - 集群部署，`nginx` 参考 `doc/nginx.conf` 配置，`redis`  参考 `doc/redis.conf` 配置，`node` 单机集群 参考 `app.json` ， [pm2使用说明](https://github.com/Unitech/pm2)
 
 - 服务的端口配置 见 `src/config.yaml` ， `connector_port` : 连接服务器 `logic_port` : 接口服务器；如果 `app.json` 中 `args` 有 `-p` 参数，则会覆盖 `src/config.yaml` 中端口配置
+
+
+### 接口说明和注意事项见[wiki](https://github.com/liutian/push/wiki)
