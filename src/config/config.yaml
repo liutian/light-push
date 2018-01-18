@@ -43,7 +43,7 @@ default: &default
   apns_aps_alert: '通知'
   apns_payload_size: 4000
 
-  admin_name: liuss
+  admin_name: demo
   admin_passwd: 123456
 
   log_path:

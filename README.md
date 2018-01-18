@@ -30,7 +30,7 @@
 
 ### 快速体验
 - `docker run -id -p 80:80 443:443 --name push-demo liuss/push /root/push/start.sh`
-- 访问管理页面: `http://127.0.0.1/push-admin` 登录名 liuss 密码 123456  勾选管理员登陆
+- 访问管理页面: `http://127.0.0.1/push-admin` 登录名 demo 密码 123456  勾选管理员选项
 
 
 ### 环境搭建
