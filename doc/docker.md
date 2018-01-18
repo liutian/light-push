@@ -65,14 +65,15 @@ cd /mnt/data/code/server/push-master
 14. 导出镜像
 - `sudo docker export push -o push.tar`
 15. 导入镜像
-- `sudo cat push.tar | sudo docker import - liuss/push`
+- `sudo cat push.tar | sudo docker import - liuss/push:1.0.0`
 16. 上传镜像到docker hub(需要先执行登录)
-- `docker push liuss/push`
+- `docker push liuss/push:1.0.0`
 
 
 ### 基于推送服务器镜像创建容器
-- `sudo docker run -id -p 80:80 --name push-demo liuss/push /mnt/data/start.sh`
-- 从宿主机拷贝文件到容器 `sudo docker cp ./dist demo:/mnt/data`
-- 从容器拷贝文件到宿主机 `sudo docker cp demo:/mnt/data/dist ./`
+- `docker run -id -p 443:443 --name push-demo liuss/push:<version> /mnt/data/start.sh` 需要将 `version` 改成对应的版本号
+- 调试web界面 `docker run -id -p 443:443 --name push-demo -v /home/docker/nginx_web:/mnt/data/nginx_web liuss/push /mnt/data/start.sh` 
+- 从宿主机拷贝文件到容器 `sudo docker cp ./dist push-demo:/mnt/data`
+- 从容器拷贝文件到宿主机 `sudo docker cp push-demo:/mnt/data/dist ./`
 
 

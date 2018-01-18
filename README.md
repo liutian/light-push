@@ -29,8 +29,8 @@
 - 服务运行时的各个参数可自行配置，比如消息默认失效时间，房间名最大长度等等
 
 ### 快速体验
-- `docker run -id -p 80:80 443:443 --name push-demo liuss/push /root/push/start.sh`
-- 访问管理页面: `http://127.0.0.1/push-admin` 登录名 demo 密码 123456  勾选管理员选项
+- `docker run -id -p 443:443 --name push-demo liuss/push:<version> /mnt/data/start.sh` 需要将 `version` 改成对应的版本号
+- 访问管理页面: `https://127.0.0.1` 登录名 demo 密码 123456  勾选管理员选项
 
 
 ### 环境搭建
