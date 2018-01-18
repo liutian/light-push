@@ -1,4 +1,4 @@
-//提供性能
+//提高异步执行的性能
 //global.Promise = require('bluebird');
 
 // 加载配置信息
