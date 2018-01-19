@@ -56,4 +56,8 @@ yum install nginx
 - 服务的端口配置 见 `src/config.yaml` ， `connector_port` : 连接服务器 `logic_port` : 接口服务器；如果 `app.json` 中 `args` 有 `-p` 参数，则会覆盖 `src/config.yaml` 中端口配置
 
 
-### 接口说明和注意事项见[wiki](https://github.com/liutian/push/wiki)
+> 接口说明和注意事项见[wiki](https://github.com/liutian/push/wiki)
+
+> 配套ios [演示项目](https://github.com/visionetwsk/WSK_iOS_SDK_Demo) [SDK](https://github.com/visionetwsk/WSK_iOS_SDK)
+
+> 配套android [SDK](https://bintray.com/visionetwsk/wskcss/wsk_sdk/1.1.1)
