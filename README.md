@@ -62,3 +62,5 @@ yum install nginx
 > 配套ios [演示项目](https://github.com/visionetwsk/WSK_iOS_SDK_Demo) [SDK](https://github.com/visionetwsk/WSK_iOS_SDK)
 
 > 配套android [SDK](https://bintray.com/visionetwsk/wskcss/wsk_sdk/1.1.1)
+
+> QQ技术交流群 [643889498](https://jq.qq.com/?_wv=1027&k=5WHk8ay)
