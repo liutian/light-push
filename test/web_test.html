@@ -11,31 +11,28 @@
 <body>
 
 
-  <script src="http://ipush-test.visionet.cn/push/socket.io/socket.io.js"></script>
+  <script src="https://39.104.57.212:55555/push/socket.io/socket.io.js"></script>
   <script>
 
-    try {
-      // var uuid = window.parseInt(Math.random() * 1000000);
-      // var uuid = Math.random() * 10000;
-      var uuid = 'uuid002';
-      var userid = 'user002';
-      var socket = io.connect('http://ipush-test.visionet.cn/visionet.findest.com?uuid=' + uuid + '&userid=' + userid, {
-        path: '/push/socket.io/'
-      });
+    // let uuid = window.parseInt(Math.random() * 1000000);
+    // let uuid = Math.random() * 10000;
+    let uuid = 'uuid002';
+    let userid = 'user002';
+    let socket = io.connect('https://39.104.57.212:55555/demo2?uuid=' + uuid + '&userid=' + userid, {
+      path: '/push/socket.io/'
+    });
 
-      document.getElementById('sendBtn').addEventListener('click', () => {
-        socket.emit('push', {
-          room: 'user_user002',
-          pushData: { message: 'qqqqqq' }
-        }, (result) => {
-          console.log(result.id);
-        });
+    document.getElementById('sendBtn').addEventListener('click', () => {
+      socket.emit('push', {
+        room: 'user_user002',
+        pushData: { message: 'qqqqqq' }
+      }, (result) => {
+        console.log(result.id);
       });
-    } catch (e) {
-      alert('error:' + e);
-    }
+    });
+
     socket.on('connect', function () {
-      var rooms = ['room-test'];
+      let rooms = ['room-test'];
 
       socket.emit('joinRoom', rooms, function (result) {
         console.log('joinRoom:' + JSON.stringify(result));

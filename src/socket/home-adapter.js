@@ -538,7 +538,6 @@ async function deleteRoom(self, room, socketId) {
   let clientCount = await redis_db.scard(key);
 
   if (clientCount > 0) {
-    logger.warn(`deleteRoom << room: ${room}  socketId: ${socketId}  don't have to clear because clientCount: ${clientCount}`);
     return;
   };
 

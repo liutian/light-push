@@ -1,1 +1,1 @@
- ab -n 100 -c 20 -p 'ab_post' -A '/visionet:fdkirek934jtr8jsdrjdf' -T 'application/json' 'http://localhost:56789/api/auth/push'
+ ab -n 100 -c 20 -p 'ab_post' -A '/demo:fdkirek934jtr8jsdrjdf' -T 'application/json' 'http://localhost:56789/api/auth/push'

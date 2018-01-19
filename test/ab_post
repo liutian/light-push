@@ -1,6 +1,6 @@
 {
 	"room": "33dd",
-	"namespace": "/visionet",
+	"namespace": "/demo",
 	"ack": true,
 	"apnsName": "iosAppName2",
 	"apnsEnv": "dev",
