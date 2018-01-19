@@ -33,6 +33,33 @@
 - 访问管理页面: `https://127.0.0.1` 登录名 demo 密码 123456  勾选管理员选项
 - [在线体验](https://39.104.57.212:55555)
 
+### 客户端调用(web)
+```
+// demo: 命名空间；uuid: 客户端唯一标示；userid: 客户端所属的用户ID
+let socket = io.connect('https://127.0.0.1:55555/demo?uuid=' + uuid + '&userid=' + userid, {
+  path: '/push/socket.io/'
+});
+
+socket.on('connect', function () {
+  // 客户端主动加入房间
+  socket.emit('joinRoom', ['room1'], function (result) {
+    console.log('joinRoom:' + JSON.stringify(result));
+  });
+  
+  // 接收服务器端的推送消息
+  socket.on('push', function (data) {
+    console.log('push:' + JSON.stringify(data));
+    // 消息确认回执
+    socket.emit('ackPush', { id: data.id });
+  });
+  
+  // 客户端主动离开房间
+  socket.emit('leaveRoom', ['room2'], function (result) {
+    console.log('leaveRoom:' + JSON.stringify(result));
+  });
+});
+```
+
 
 ### 环境搭建
 - 安装 `nodejs` (需要超级管理员权限) [详情](https://nodejs.org/en/download/package-manager/#freebsd-and-openbsd)
