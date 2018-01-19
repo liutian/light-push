@@ -86,6 +86,8 @@ yum install nginx
 
 > 接口说明和注意事项见[wiki](https://github.com/liutian/push/wiki)
 
+> 推送服务控制台项目 [地址](https://github.com/liutian/push-admin)
+
 > 配套ios [演示项目](https://github.com/visionetwsk/WSK_iOS_SDK_Demo) [SDK](https://github.com/visionetwsk/WSK_iOS_SDK)
 
 > 配套android [SDK](https://bintray.com/visionetwsk/wskcss/wsk_sdk/1.1.1)
