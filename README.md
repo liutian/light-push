@@ -84,7 +84,7 @@ yum install nginx
 - 服务的端口配置 见 `src/config.yaml` ， `connector_port` : 连接服务器 `logic_port` : 接口服务器；如果 `app.json` 中 `args` 有 `-p` 参数，则会覆盖 `src/config.yaml` 中端口配置
 
 
-> 接口说明和注意事项见[wiki](https://github.com/liutian/push/wiki)
+> 接口说明和注意事项见[wiki](https://github.com/liutian/light-push/wiki)
 
 > 推送服务控制台项目 [地址](https://github.com/liutian/push-admin)
 
