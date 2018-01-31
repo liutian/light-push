@@ -31,7 +31,7 @@
 - 服务运行时的各个参数可自行配置，比如消息默认失效时间，房间名最大长度等等
 
 ### 快速体验
-- `docker run -id -p 443:443 --name push-demo liuss/push:<version> /mnt/data/start.sh` 需要将 `version` 改成对应的版本号
+- `docker run -id -p 443:443 --name light-push-demo liuss/light-push:<version> /mnt/data/start.sh` 需要将 `version` 改成对应的版本号
 - 访问管理页面: `https://127.0.0.1` 登录名 demo 密码 123456  勾选管理员选项
 - [在线体验](https://39.104.57.212:55555)
 
@@ -86,9 +86,9 @@ yum install nginx
 - 服务的端口配置 见 `src/config.yaml` ， `connector_port` : 连接服务器 `logic_port` : 接口服务器；如果 `app.json` 中 `args` 有 `-p` 参数，则会覆盖 `src/config.yaml` 中端口配置
 
 
-> 接口说明和注意事项见[wiki](https://github.com/liutian/light-push/wiki)
+> 接口说明和注意事项见[wiki](https://github.com/liutian/light-light-push/wiki)
 
-> 推送服务控制台项目 [地址](https://github.com/liutian/push-admin)
+> 推送服务控制台项目 [地址](https://github.com/liutian/light-push-admin)
 
 > 配套ios [演示项目](https://github.com/visionetwsk/WSK_iOS_SDK_Demo) [SDK](https://github.com/visionetwsk/WSK_iOS_SDK)
 
