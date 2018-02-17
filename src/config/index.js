@@ -81,10 +81,11 @@ function defaultConfig() {
   // nsp    namespace
   // z      sorted set
   return {
-    redis_push_msg_id_prefix: 'msg_h_',                                     //消息id的前缀
+    redis_push_msg_id_prefix: 'msg_h_',                                       //消息id的前缀
     redis_total_client_set_prefix: 't_c_s_',                                  //保存每个命名空间下历史客户端集合
     redis_total_client_sort_set_prefix: 't_c_z_',                             //保持每个命名空间下历史客户端以最后登陆时间距1970元年的天数为分数排列
     redis_client_set_prefix: 'c_s_',                                          //保存每个命名空间下的客户端集合
+    redis_user_client_geo_prefix: 'u_c_g_',                                   //保存每个命名空间下的用户所有客户端坐标信息
     redis_user_set_prefix: 'u_s_',                                            //保存每个命名空间下的用户集合
     redis_total_all_room_set_prefix: 't_all_r_s_',                            //保存每个命名空间下历史房间集合(包括普通房间和用户类型的房间)        
     redis_room_set_prefix: 'r_s_',                                            //保存每个命名空间下的房间集合(只保存普通房间,不包括用户类型的房间)

@@ -135,7 +135,7 @@ async function connectionListener(socket) {
     });
   });
 
-  //获取客户端详情
+  //客户端获取/设置信息
   socket.on('info', function (data, callback) {
     let clientId = socket.id;
     if (data && data.clientId) {
@@ -143,7 +143,11 @@ async function connectionListener(socket) {
       logger.warn('socket.id: ' + socket.id + '  fake identity  clientId: ' + data.clientId);
       //注意这里可能存在安全漏洞，可以修改其它设备的信息
     }
-    clientService.info(clientId, data).then(function (result) {
+
+    clientService.info(clientId, Object.assign({}, data, {
+      nspName: socket.nsp.name,
+      userId: socket.handshake.userid
+    })).then(function (result) {
       if (result) {
         result.status = _util.isNumber(result.status) ? result.status : 200;
         result.msg = result.msg || 'ok';
@@ -159,7 +163,7 @@ async function connectionListener(socket) {
   // 客户端主动推送消息，艰难的决定，从一开始就告诉自己绝不能开这个接口否则出问题排查起来很困难，但是没办法迫于业务的压力
   socket.on('push', function (data, callback) {
     let now = Date.now();
-    if(now - socket._lastPushTime < config.client_push_interval * 1000){
+    if (now - socket._lastPushTime < config.client_push_interval * 1000) {
       return callback && callback({ status: 500, msg: `limited access in ${config.client_push_interval}s` });
     }
 
@@ -176,6 +180,34 @@ async function connectionListener(socket) {
       callback && callback({ status: e.status || 500, msg: e.msg || e.message });
     });
   });
+
+
+  // 根据当前客户端位置获取最近对客户端列表
+  socket.on('discover', function (data, callback) {
+    if (!callback) {
+      return;
+    }
+    let clientId = socket.id;
+    if (data && data.clientId) {
+      clientId = data.clientId;
+      logger.warn('socket.id: ' + socket.id + '  fake identity  clientId: ' + data.clientId);
+      //注意这里可能存在安全漏洞，可以修改其它设备的信息
+    }
+
+    clientService.discover(Object.assign({}, data, {
+      id: clientId,
+      userId: socket.handshake.userid,
+      nspName: socket.nsp.name
+    })).then(function (result) {
+      callback && callback({
+        list: result,
+        status: _util.isNumber(result.status) ? result.status : 200,
+        msg: result.msg || 'ok'
+      });
+    }, function (err) {
+      callback && callback({ status: err.status || 500, msg: err.msg || err.message });
+    });
+  })
 }
 
 

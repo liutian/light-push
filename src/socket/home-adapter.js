@@ -29,6 +29,7 @@ const redis_a_r_c_s = config.redis_android_room_client_set_prefix;
 const redis_c_h = config.redis_client_hash_prefix;
 const redis_p_m_i = config.redis_push_msg_id_prefix;
 const redis_h_b_c = config.redis_home_broadcast_channel;
+const edis_u_c_g = config.redis_user_client_geo_prefix;
 
 const USER_ROOM_PREFIX_REG = new RegExp('^' + config.user_room_prefix, 'i');//判断是否是用户类型的房间
 const ROOM_PREFIX_REG = new RegExp('^' + config.room_prefix, 'i');//房间统一当前缀
@@ -375,6 +376,8 @@ async function delAll(self, socket) {
     last_disconnect_time: Date.now(),
     disconnect_reason: 'network'
   });
+  //移除客户端坐标
+  redisMulti = _redis.zrem(edis_u_c_g + nspName, socket.handshake.userid + '|' + socket.id);
 
   try {
     await redisMulti.exec();
