@@ -226,14 +226,17 @@ Namespace.prototype.emit = function(ev){
 
   var rooms = this.rooms.slice(0);
   var flags = Object.assign({}, this.flags);
+  var except = this.except.slice(0);
 
   // reset flags
   this.rooms = [];
   this.flags = {};
+  this.except = [];
 
   this.adapter.broadcast(packet, {
     rooms: rooms,
-    flags: flags
+    flags: flags,
+    except: except
   });
 
   return this;

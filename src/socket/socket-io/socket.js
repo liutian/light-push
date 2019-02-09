@@ -246,7 +246,7 @@ Socket.prototype.join = function(rooms, fn){
     fn && fn(null);
     return this;
   }
-  this.adapter.addAll(this.id, rooms, function(err){
+  this.adapter.addAll(this, rooms, function(err){
     if (err) return fn && fn(err);
     debug('joined room %s', rooms);
     rooms.forEach(function (room) {
@@ -269,7 +269,7 @@ Socket.prototype.join = function(rooms, fn){
 Socket.prototype.leave = function(room, fn){
   debug('leave room %s', room);
   var self = this;
-  this.adapter.del(this.id, room, function(err){
+  this.adapter.del(this, room, function(err){
     if (err) return fn && fn(err);
     debug('left room %s', room);
     delete self.rooms[room];
@@ -285,7 +285,7 @@ Socket.prototype.leave = function(room, fn){
  */
 
 Socket.prototype.leaveAll = function(){
-  this.adapter.delAll(this.id);
+  this.adapter.delAll(this);
   this.rooms = {};
 };
 
