@@ -7,7 +7,6 @@ var parser = require('socket.io-parser');
 var debug = require('debug')('socket.io:client');
 var url = require('url');
 
-var ioServer = require('../server');
 /**
  * Module exports.
  */
@@ -22,7 +21,7 @@ module.exports = Client;
  * @api private
  */
 
-function Client(server, conn) {
+function Client(server, conn){
   this.server = server;
   this.conn = conn;
   this.encoder = server.encoder;
@@ -41,7 +40,7 @@ function Client(server, conn) {
  * @api private
  */
 
-Client.prototype.setup = function () {
+Client.prototype.setup = function(){
   this.onclose = this.onclose.bind(this);
   this.ondata = this.ondata.bind(this);
   this.onerror = this.onerror.bind(this);
@@ -57,16 +56,37 @@ Client.prototype.setup = function () {
  * Connects a client to a namespace.
  *
  * @param {String} name namespace
+ * @param {Object} query the query parameters
  * @api private
  */
 
-Client.prototype.connect = function (name, query) {
-  debug('connecting to namespace %s', name);
-  var nsp = this.server.nsps[name];
-  if (!nsp) {
-    ioServer.addNSRegister(name);
-    nsp = this.server.nsps[name];
+Client.prototype.connect = function(name, query){
+  if (this.server.nsps[name]) {
+    debug('connecting to namespace %s', name);
+    return this.doConnect(name, query);
   }
+
+  this.server.checkNamespace(name, query, (dynamicNsp) => {
+    if (dynamicNsp) {
+      debug('dynamic namespace %s was created', dynamicNsp.name);
+      this.doConnect(name, query);
+    } else {
+      debug('creation of namespace %s was denied', name);
+      this.packet({ type: parser.ERROR, nsp: name, data: 'Invalid namespace' });
+    }
+  });
+};
+
+/**
+ * Connects a client to a namespace.
+ *
+ * @param {String} name namespace
+ * @param {String} query the query parameters
+ * @api private
+ */
+
+Client.prototype.doConnect = function(name, query){
+  var nsp = this.server.of(name);
 
   if ('/' != name && !this.nsps['/']) {
     this.connectBuffer.push(name);
@@ -74,7 +94,7 @@ Client.prototype.connect = function (name, query) {
   }
 
   var self = this;
-  var socket = nsp.add(this, query, function () {
+  var socket = nsp.add(this, query, function(){
     self.sockets[socket.id] = socket;
     self.nsps[nsp.name] = socket;
 
@@ -91,7 +111,7 @@ Client.prototype.connect = function (name, query) {
  * @api private
  */
 
-Client.prototype.disconnect = function () {
+Client.prototype.disconnect = function(){
   for (var id in this.sockets) {
     if (this.sockets.hasOwnProperty(id)) {
       this.sockets[id].disconnect();
@@ -107,7 +127,7 @@ Client.prototype.disconnect = function () {
  * @api private
  */
 
-Client.prototype.remove = function (socket) {
+Client.prototype.remove = function(socket){
   if (this.sockets.hasOwnProperty(socket.id)) {
     var nsp = this.sockets[socket.id].nsp.name;
     delete this.sockets[socket.id];
@@ -123,7 +143,7 @@ Client.prototype.remove = function (socket) {
  * @api private
  */
 
-Client.prototype.close = function () {
+Client.prototype.close = function(){
   if ('open' == this.conn.readyState) {
     debug('forcing transport close');
     this.conn.close();
@@ -139,7 +159,7 @@ Client.prototype.close = function () {
  * @api private
  */
 
-Client.prototype.packet = function (packet, opts) {
+Client.prototype.packet = function(packet, opts){
   opts = opts || {};
   var self = this;
 
@@ -169,11 +189,11 @@ Client.prototype.packet = function (packet, opts) {
  * @api private
  */
 
-Client.prototype.ondata = function (data) {
+Client.prototype.ondata = function(data){
   // try/catch is needed for protocol violations (GH-1880)
   try {
     this.decoder.add(data);
-  } catch (e) {
+  } catch(e) {
     this.onerror(e);
   }
 };
@@ -184,13 +204,13 @@ Client.prototype.ondata = function (data) {
  * @api private
  */
 
-Client.prototype.ondecoded = function (packet) {
+Client.prototype.ondecoded = function(packet) {
   if (parser.CONNECT == packet.type) {
     this.connect(url.parse(packet.nsp).pathname, url.parse(packet.nsp, true).query);
   } else {
     var socket = this.nsps[packet.nsp];
     if (socket) {
-      process.nextTick(function () {
+      process.nextTick(function() {
         socket.onpacket(packet);
       });
     } else {
@@ -206,7 +226,7 @@ Client.prototype.ondecoded = function (packet) {
  * @api private
  */
 
-Client.prototype.onerror = function (err) {
+Client.prototype.onerror = function(err){
   for (var id in this.sockets) {
     if (this.sockets.hasOwnProperty(id)) {
       this.sockets[id].onerror(err);
@@ -222,7 +242,7 @@ Client.prototype.onerror = function (err) {
  * @api private
  */
 
-Client.prototype.onclose = function (reason) {
+Client.prototype.onclose = function(reason){
   debug('client close with reason %s', reason);
 
   // ignore a potential subsequent `close` event
@@ -245,7 +265,7 @@ Client.prototype.onclose = function (reason) {
  * @api private
  */
 
-Client.prototype.destroy = function () {
+Client.prototype.destroy = function(){
   this.conn.removeListener('data', this.ondata);
   this.conn.removeListener('error', this.onerror);
   this.conn.removeListener('close', this.onclose);

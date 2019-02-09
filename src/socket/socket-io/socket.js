@@ -5,9 +5,9 @@
 
 var Emitter = require('events').EventEmitter;
 var parser = require('socket.io-parser');
+var hasBin = require('has-binary2');
 var url = require('url');
 var debug = require('debug')('socket.io:socket');
-var assign = require('object-assign');
 
 /**
  * Module exports.
@@ -39,7 +39,8 @@ exports.events = [
 var flags = [
   'json',
   'volatile',
-  'broadcast'
+  'broadcast',
+  'local'
 ];
 
 /**
@@ -56,7 +57,7 @@ var emit = Emitter.prototype.emit;
  * @api public
  */
 
-function Socket(nsp, client, query) {
+function Socket(nsp, client, query){
   this.nsp = nsp;
   this.server = nsp.server;
   this.adapter = this.nsp.adapter;
@@ -83,9 +84,9 @@ Socket.prototype.__proto__ = Emitter.prototype;
  * Apply flags from `Socket`.
  */
 
-flags.forEach(function (flag) {
+flags.forEach(function(flag){
   Object.defineProperty(Socket.prototype, flag, {
-    get: function () {
+    get: function() {
       this.flags[flag] = true;
       return this;
     }
@@ -99,7 +100,7 @@ flags.forEach(function (flag) {
  */
 
 Object.defineProperty(Socket.prototype, 'request', {
-  get: function () {
+  get: function() {
     return this.conn.request;
   }
 });
@@ -110,12 +111,12 @@ Object.defineProperty(Socket.prototype, 'request', {
  * @api private
  */
 
-Socket.prototype.buildHandshake = function (query) {
+Socket.prototype.buildHandshake = function(query){
   var self = this;
-  function buildQuery() {
+  function buildQuery(){
     var requestQuery = url.parse(self.request.url, true).query;
     //if socket-specific query exist, replace query strings in requestQuery
-    return assign({}, query, requestQuery);
+    return Object.assign({}, query, requestQuery);
   }
   return {
     headers: this.request.headers,
@@ -136,7 +137,7 @@ Socket.prototype.buildHandshake = function (query) {
  * @api public
  */
 
-Socket.prototype.emit = function (ev) {
+Socket.prototype.emit = function(ev){
   if (~exports.events.indexOf(ev)) {
     emit.apply(this, arguments);
     return this;
@@ -144,7 +145,7 @@ Socket.prototype.emit = function (ev) {
 
   var args = Array.prototype.slice.call(arguments);
   var packet = {
-    type: parser.EVENT,
+    type: (this.flags.binary !== undefined ? this.flags.binary : hasBin(args)) ? parser.BINARY_EVENT : parser.EVENT,
     data: args
   };
 
@@ -160,7 +161,7 @@ Socket.prototype.emit = function (ev) {
   }
 
   var rooms = this._rooms.slice(0);
-  var flags = assign({}, this.flags);
+  var flags = Object.assign({}, this.flags);
 
   // reset flags
   this._rooms = [];
@@ -188,10 +189,10 @@ Socket.prototype.emit = function (ev) {
  */
 
 Socket.prototype.to =
-  Socket.prototype.in = function (name) {
-    if (!~this._rooms.indexOf(name)) this._rooms.push(name);
-    return this;
-  };
+Socket.prototype.in = function(name){
+  if (!~this._rooms.indexOf(name)) this._rooms.push(name);
+  return this;
+};
 
 /**
  * Sends a `message` event.
@@ -201,12 +202,12 @@ Socket.prototype.to =
  */
 
 Socket.prototype.send =
-  Socket.prototype.write = function () {
-    var args = Array.prototype.slice.call(arguments);
-    args.unshift('message');
-    this.emit.apply(this, args);
-    return this;
-  };
+Socket.prototype.write = function(){
+  var args = Array.prototype.slice.call(arguments);
+  args.unshift('message');
+  this.emit.apply(this, args);
+  return this;
+};
 
 /**
  * Writes a packet.
@@ -216,7 +217,7 @@ Socket.prototype.send =
  * @api private
  */
 
-Socket.prototype.packet = function (packet, opts) {
+Socket.prototype.packet = function(packet, opts){
   packet.nsp = this.nsp.name;
   opts = opts || {};
   opts.compress = false !== opts.compress;
@@ -232,7 +233,7 @@ Socket.prototype.packet = function (packet, opts) {
  * @api private
  */
 
-Socket.prototype.join = function (rooms, fn) {
+Socket.prototype.join = function(rooms, fn){
   debug('joining room %s', rooms);
   var self = this;
   if (!Array.isArray(rooms)) {
@@ -245,7 +246,7 @@ Socket.prototype.join = function (rooms, fn) {
     fn && fn(null);
     return this;
   }
-  this.adapter.addAll(this, rooms, function (err) {
+  this.adapter.addAll(this.id, rooms, function(err){
     if (err) return fn && fn(err);
     debug('joined room %s', rooms);
     rooms.forEach(function (room) {
@@ -265,10 +266,10 @@ Socket.prototype.join = function (rooms, fn) {
  * @api private
  */
 
-Socket.prototype.leave = function (room, fn) {
+Socket.prototype.leave = function(room, fn){
   debug('leave room %s', room);
   var self = this;
-  this.adapter.del(this, room, function (err) {
+  this.adapter.del(this.id, room, function(err){
     if (err) return fn && fn(err);
     debug('left room %s', room);
     delete self.rooms[room];
@@ -283,8 +284,8 @@ Socket.prototype.leave = function (room, fn) {
  * @api private
  */
 
-Socket.prototype.leaveAll = function () {
-  this.adapter.delAll(this);
+Socket.prototype.leaveAll = function(){
+  this.adapter.delAll(this.id);
   this.rooms = {};
 };
 
@@ -297,7 +298,7 @@ Socket.prototype.leaveAll = function () {
  * @api private
  */
 
-Socket.prototype.onconnect = function () {
+Socket.prototype.onconnect = function(){
   debug('socket connected - writing packet');
   this.nsp.connected[this.id] = this;
   this.join(this.id);
@@ -316,7 +317,7 @@ Socket.prototype.onconnect = function () {
  * @api private
  */
 
-Socket.prototype.onpacket = function (packet) {
+Socket.prototype.onpacket = function(packet){
   debug('got packet %j', packet);
   switch (packet.type) {
     case parser.EVENT:
@@ -340,7 +341,7 @@ Socket.prototype.onpacket = function (packet) {
       break;
 
     case parser.ERROR:
-      this.emit('error', packet.data);
+      this.onerror(new Error(packet.data));
   }
 };
 
@@ -351,7 +352,7 @@ Socket.prototype.onpacket = function (packet) {
  * @api private
  */
 
-Socket.prototype.onevent = function (packet) {
+Socket.prototype.onevent = function(packet){
   var args = packet.data || [];
   debug('emitting event %j', args);
 
@@ -370,10 +371,10 @@ Socket.prototype.onevent = function (packet) {
  * @api private
  */
 
-Socket.prototype.ack = function (id) {
+Socket.prototype.ack = function(id){
   var self = this;
   var sent = false;
-  return function () {
+  return function(){
     // prevent double callbacks
     if (sent) return;
     var args = Array.prototype.slice.call(arguments);
@@ -381,7 +382,7 @@ Socket.prototype.ack = function (id) {
 
     self.packet({
       id: id,
-      type: parser.ACK,
+      type: hasBin(args) ? parser.BINARY_ACK : parser.ACK,
       data: args
     });
 
@@ -395,7 +396,7 @@ Socket.prototype.ack = function (id) {
  * @api private
  */
 
-Socket.prototype.onack = function (packet) {
+Socket.prototype.onack = function(packet){
   var ack = this.acks[packet.id];
   if ('function' == typeof ack) {
     debug('calling ack %s with %j', packet.id, packet.data);
@@ -412,7 +413,7 @@ Socket.prototype.onack = function (packet) {
  * @api private
  */
 
-Socket.prototype.ondisconnect = function () {
+Socket.prototype.ondisconnect = function(){
   debug('got disconnect packet');
   this.onclose('client namespace disconnect');
 };
@@ -423,7 +424,7 @@ Socket.prototype.ondisconnect = function () {
  * @api private
  */
 
-Socket.prototype.onerror = function (err) {
+Socket.prototype.onerror = function(err){
   if (this.listeners('error').length) {
     this.emit('error', err);
   } else {
@@ -440,7 +441,7 @@ Socket.prototype.onerror = function (err) {
  * @api private
  */
 
-Socket.prototype.onclose = function (reason) {
+Socket.prototype.onclose = function(reason){
   if (!this.connected) return this;
   debug('closing socket - reason %s', reason);
   this.emit('disconnecting', reason);
@@ -460,7 +461,7 @@ Socket.prototype.onclose = function (reason) {
  * @api private
  */
 
-Socket.prototype.error = function (err) {
+Socket.prototype.error = function(err){
   this.packet({ type: parser.ERROR, data: err });
 };
 
@@ -472,7 +473,7 @@ Socket.prototype.error = function (err) {
  * @api public
  */
 
-Socket.prototype.disconnect = function (close) {
+Socket.prototype.disconnect = function(close){
   if (!this.connected) return this;
   if (close) {
     this.client.disconnect();
@@ -491,10 +492,23 @@ Socket.prototype.disconnect = function (close) {
  * @api public
  */
 
-Socket.prototype.compress = function (compress) {
+Socket.prototype.compress = function(compress){
   this.flags.compress = compress;
   return this;
 };
+
+/**
+ * Sets the binary flag
+ *
+ * @param {Boolean} Encode as if it has binary data if `true`, Encode as if it doesnt have binary data if `false`
+ * @return {Socket} self
+ * @api public
+ */
+
+ Socket.prototype.binary = function (binary) {
+   this.flags.binary = binary;
+   return this;
+ };
 
 /**
  * Dispatch incoming event to socket listeners.
@@ -503,11 +517,11 @@ Socket.prototype.compress = function (compress) {
  * @api private
  */
 
-Socket.prototype.dispatch = function (event) {
+Socket.prototype.dispatch = function(event){
   debug('dispatching an event %j', event);
   var self = this;
   function dispatchSocket(err) {
-    process.nextTick(function () {
+    process.nextTick(function(){
       if (err) {
         return self.error(err.data || err.message);
       }
@@ -525,7 +539,7 @@ Socket.prototype.dispatch = function (event) {
  * @api public
  */
 
-Socket.prototype.use = function (fn) {
+Socket.prototype.use = function(fn){
   this.fns.push(fn);
   return this;
 };
@@ -537,12 +551,12 @@ Socket.prototype.use = function (fn) {
  * @param {Function} last fn call in the middleware
  * @api private
  */
-Socket.prototype.run = function (event, fn) {
+Socket.prototype.run = function(event, fn){
   var fns = this.fns.slice(0);
   if (!fns.length) return fn(null);
 
-  function run(i) {
-    fns[i](event, function (err) {
+  function run(i){
+    fns[i](event, function(err){
       // upon error, short-circuit
       if (err) return fn(err);
 

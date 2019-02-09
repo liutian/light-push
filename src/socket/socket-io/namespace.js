@@ -6,6 +6,7 @@
 var Socket = require('./socket');
 var Emitter = require('events').EventEmitter;
 var parser = require('socket.io-parser');
+var hasBin = require('has-binary2');
 var debug = require('debug')('socket.io:namespace');
 
 /**
@@ -48,7 +49,7 @@ var emit = Emitter.prototype.emit;
  * @api private
  */
 
-function Namespace(server, name) {
+function Namespace(server, name){
   this.name = name;
   this.server = server;
   this.sockets = {};
@@ -70,9 +71,9 @@ Namespace.prototype.__proto__ = Emitter.prototype;
  * Apply flags from `Socket`.
  */
 
-exports.flags.forEach(function (flag) {
+exports.flags.forEach(function(flag){
   Object.defineProperty(Namespace.prototype, flag, {
-    get: function () {
+    get: function() {
       this.flags[flag] = true;
       return this;
     }
@@ -87,7 +88,7 @@ exports.flags.forEach(function (flag) {
  * @api private
  */
 
-Namespace.prototype.initAdapter = function () {
+Namespace.prototype.initAdapter = function(){
   this.adapter = new (this.server.adapter())(this);
 };
 
@@ -98,8 +99,8 @@ Namespace.prototype.initAdapter = function () {
  * @api public
  */
 
-Namespace.prototype.use = function (fn) {
-  if (this.server.eio) {
+Namespace.prototype.use = function(fn){
+  if (this.server.eio && this.name === '/') {
     debug('removing initial packet');
     delete this.server.eio.initialPacket;
   }
@@ -115,12 +116,12 @@ Namespace.prototype.use = function (fn) {
  * @api private
  */
 
-Namespace.prototype.run = function (socket, fn) {
+Namespace.prototype.run = function(socket, fn){
   var fns = this.fns.slice(0);
   if (!fns.length) return fn(null);
 
-  function run(i) {
-    fns[i](socket, function (err) {
+  function run(i){
+    fns[i](socket, function(err){
       // upon error, short-circuit
       if (err) return fn(err);
 
@@ -144,10 +145,10 @@ Namespace.prototype.run = function (socket, fn) {
  */
 
 Namespace.prototype.to =
-  Namespace.prototype.in = function (name) {
-    if (!~this.rooms.indexOf(name)) this.rooms.push(name);
-    return this;
-  };
+Namespace.prototype.in = function(name){
+  if (!~this.rooms.indexOf(name)) this.rooms.push(name);
+  return this;
+};
 
 /**
  * Adds a new client.
@@ -156,12 +157,12 @@ Namespace.prototype.to =
  * @api private
  */
 
-Namespace.prototype.add = function (client, query, fn) {
+Namespace.prototype.add = function(client, query, fn){
   debug('adding socket to nsp %s', this.name);
   var socket = new Socket(this, client, query);
   var self = this;
-  this.run(socket, function (err) {
-    process.nextTick(function () {
+  this.run(socket, function(err){
+    process.nextTick(function(){
       if ('open' == client.conn.readyState) {
         if (err) return socket.error(err.data || err.message);
 
@@ -192,7 +193,7 @@ Namespace.prototype.add = function (client, query, fn) {
  * @api private
  */
 
-Namespace.prototype.remove = function (socket) {
+Namespace.prototype.remove = function(socket){
   if (this.sockets.hasOwnProperty(socket.id)) {
     delete this.sockets[socket.id];
   } else {
@@ -207,28 +208,34 @@ Namespace.prototype.remove = function (socket) {
  * @api public
  */
 
-Namespace.prototype.emit = function (ev) {
+Namespace.prototype.emit = function(ev){
   if (~exports.events.indexOf(ev)) {
     emit.apply(this, arguments);
-  } else {
-    // set up packet object
-    var args = Array.prototype.slice.call(arguments);
-    var packet = { type: parser.EVENT, data: args };
-
-    if ('function' == typeof args[args.length - 1]) {
-      throw new Error('Callbacks are not supported when broadcasting');
-    }
-
-    this.adapter.broadcast(packet, {
-      rooms: this.rooms,
-      flags: this.flags,
-      except: this.except
-    });
-
-    this.rooms = [];
-    this.flags = {};
-    this.except = [];
+    return this;
   }
+  // set up packet object
+  var args = Array.prototype.slice.call(arguments);
+  var packet = {
+    type: (this.flags.binary !== undefined ? this.flags.binary : hasBin(args)) ? parser.BINARY_EVENT : parser.EVENT,
+    data: args
+  };
+
+  if ('function' == typeof args[args.length - 1]) {
+    throw new Error('Callbacks are not supported when broadcasting');
+  }
+
+  var rooms = this.rooms.slice(0);
+  var flags = Object.assign({}, this.flags);
+
+  // reset flags
+  this.rooms = [];
+  this.flags = {};
+
+  this.adapter.broadcast(packet, {
+    rooms: rooms,
+    flags: flags
+  });
+
   return this;
 };
 
@@ -240,12 +247,12 @@ Namespace.prototype.emit = function (ev) {
  */
 
 Namespace.prototype.send =
-  Namespace.prototype.write = function () {
-    var args = Array.prototype.slice.call(arguments);
-    args.unshift('message');
-    this.emit.apply(this, args);
-    return this;
-  };
+Namespace.prototype.write = function(){
+  var args = Array.prototype.slice.call(arguments);
+  args.unshift('message');
+  this.emit.apply(this, args);
+  return this;
+};
 
 /**
  * Gets a list of clients.
@@ -254,7 +261,10 @@ Namespace.prototype.send =
  * @api public
  */
 
-Namespace.prototype.clients = function (fn) {
+Namespace.prototype.clients = function(fn){
+  if(!this.adapter){
+    throw new Error('No adapter for this namespace, are you trying to get the list of clients of a dynamic namespace?')
+  }
   this.adapter.clients(this.rooms, fn);
   // reset rooms for scenario:
   // .in('room').clients() (GH-1978)
@@ -270,7 +280,20 @@ Namespace.prototype.clients = function (fn) {
  * @api public
  */
 
-Namespace.prototype.compress = function (compress) {
+Namespace.prototype.compress = function(compress){
   this.flags.compress = compress;
   return this;
 };
+
+/**
+ * Sets the binary flag
+ *
+ * @param {Boolean} Encode as if it has binary data if `true`, Encode as if it doesnt have binary data if `false`
+ * @return {Socket} self
+ * @api public
+ */
+
+ Namespace.prototype.binary = function (binary) {
+   this.flags.binary = binary;
+   return this;
+ };
