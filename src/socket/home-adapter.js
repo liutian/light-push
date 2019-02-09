@@ -66,7 +66,7 @@ function Adapter(nsp) {
     sub.on('message', this.onmessage.bind(this));
   }
 
-  nsp.use(handshake);
+  // nsp.use(handshake);
 
   namespace.addOfflineListener(name => {
     if (this.nsp.name != name) return;
@@ -377,7 +377,7 @@ async function delAll(self, socket) {
     disconnect_reason: 'network'
   });
   //移除客户端坐标
-  redisMulti = _redis.zrem(edis_u_c_g + nspName, socket.handshake.userid + '|' + socket.id);
+  redisMulti = redisMulti.zrem(edis_u_c_g + nspName, socket.handshake.userid + '|' + socket.id);
 
   try {
     await redisMulti.exec();

@@ -13,6 +13,8 @@ const http = require('http');
 const log4js = require('log4js');
 const HomeAdapter = require('./home-adapter');
 const io = require('./socket-io');
+const _server = require('./server');
+const handshake = require('./handshake');
 //该模块只订阅消息然后触发操作，被动式
 require('./transfer');
 
@@ -31,3 +33,18 @@ global._ipush_ioApp = io(server, {
   pingInterval: config.pingInterval,
   pingTimeout: config.pingTimeout
 });
+
+// 通过动态命名空间方式创建nsp
+/** 注意禁止使用parentNsp.emit 方法，会有问题 */
+const parentNsp = global._ipush_ioApp.of(function (name, query, next) {
+  next(null, true);
+});
+const parentNspCreateChild = parentNsp.createChild.bind(parentNsp);
+parentNsp.createChild = function (name) {
+  const nsp = parentNspCreateChild(name);
+  nsp.use(handshake);
+  _server.addNSRegister(name);
+  return nsp;
+}
+
+
