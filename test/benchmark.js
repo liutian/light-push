@@ -19,7 +19,7 @@ connect();
 
 function init() {
 
-  config.join_room_rule.forEach(function (item, index) {
+  (config.join_room_rule || []).forEach(function (item, index) {
     if (item.total < item.pick_count) {
       throw new Error('join_room_rule total must be greater than pick_count');
     }
@@ -85,7 +85,6 @@ function connect() {
     ++receiveMsgCount;
 
     console.log('receiveMsgCount : ' + receiveMsgCount);
-    console.log('receiveMessage Data expectAckCount: ' + data.expectAckCount);
 
     socket.emit('ackPush', { id: data.id });
   });
