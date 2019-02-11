@@ -1,16 +1,18 @@
 ---
 
 default: &default #所有时间以秒为单位
-  server: http://ipush-test.demo.cn #服务器地址
-  push_option_path: /push/socket.io/
-  client_namespace: /demo #命名空间
+  server: http://127.0.0.1:21315 #服务器地址
+  push_option_path: /socket.io/
+  #server: http://ipush-test.demo.cn
+  #push_option_path: /push/socket.io/
+  client_namespace: /demo1 #命名空间
   client_total: 10 #模拟客户端总数
   client_platform: web #平台类型，ios/android/web
-  client_uuid_prefix: ww  #uuid的前缀
+  client_uuid_prefix: wid  #uuid的前缀
   client_uuid_init: 400 #uuid初始值,累加+1
   client_connect_interval: 1 #创建客户端的时间间隔
-  public_room: 33dd  #所有客户端都会进入的房间
-  join_room_rule:  #进入房间的规则,prefix: 房间前缀  total: 最大随机生成房间总数  
+  public_room: w-room  #所有客户端都会进入的房间
+  join_room_rule:  #进入房间的规则,prefix: 房间前缀  total: 最大随机生成房间总数
     - {prefix: r1, total: 100, pick_count: 10, send_msg_odds: 10}
     - {prefix: r2, total: 50, pick_count: 20, send_msg_odds: 20}
     - {prefix: r3, total: 200, pick_count: 10, send_msg_odds: 30}
