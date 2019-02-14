@@ -18,7 +18,7 @@ location /push-logic/ {
 }
 
 location /push-admin {
-  alias /home/web/push-admin;
+  alias /mnt/data/nginx_web/light-push-admin;
   if ($uri ~* \.(css|js|png|jpg|gif|otf|eot|svg|ttf|woff|woff2)$) {
     expires max;
     add_header cache force;

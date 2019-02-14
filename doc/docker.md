@@ -61,28 +61,31 @@
 11. 下载web端源码
 - `cd /mnt/data/code && wget https://github.com/liutian/light-push-admin/archive/master.zip && unzip master.zip -d web && rm master.zip`
 12. 安装web端依赖并执行构建任务,将src/environment目录下文件中 api 字段ip地址改为自己服务器的ip地址,如果是本地允许docker镜像则不需要修改ip，默认为127.0.0.1
-- `cd /mnt/data/code/web/light-push-admin-master && npm install && npm run build && rm -rf /mnt/data/nginx_web/light-push-admin/*.* && cp -R dist/* /mnt/data/nginx_web/light-push-admin `
-13. 编写启动服务的脚本
+- `cd /mnt/data/code/web/light-push-admin-master && npm install && npm run build-docker && rm -rf /mnt/data/nginx_web/light-push-admin/*.* && cp -R dist/* /mnt/data/nginx_web/light-push-admin `
+13. 编写启动服务的脚本 `/mnt/data/start.sh`
 ```
 #!/bin/sh
 /usr/sbin/nginx -c /etc/nginx/nginx.conf
-/usr/local/bin/redis-server /etc/redis.conf
+/usr/local/src/redis-5.0.3/src/redis-server /etc/redis.conf
 cd /mnt/data/code/server/light-push-master
 /usr/bin/pm2 start app.json
 /bin/bash
 ```
+>修改权限 `chmod u+x /mnt/data/start.sh`
+
+14. 验证服务 `curl http://127.0.0.1:21314/socket.io/socket.io.js`
 14. 服务器端调优见 `doc/performance.md`
 15. 导出镜像
 - `sudo docker export light-push -o light-push.tar`
 16. 导入镜像
-- `sudo cat light-push.tar | sudo docker import - liuss/light-push:1.0.0`
+- `sudo cat light-push.tar | sudo docker import - liuss/light-push:1.1.0`
 17. 上传镜像到docker hub(需要先执行登录)
-- `docker light-push liuss/light-push:1.0.0`
+- `sudo docker push liuss/light-push:1.1.0`
 
 
 ### 基于推送服务器镜像创建容器
-- `docker run -id -p 443:443 --name light-push-demo liuss/light-push:<version> /mnt/data/start.sh` 需要将 `version` 改成对应的版本号
-- 调试web界面 `docker run -id -p 443:443 --name light-push-demo -v /home/docker/nginx_web:/mnt/data/nginx_web liuss/light-push /mnt/data/start.sh`
+- `sudo docker run -id -p 443:443 -p 80:80 --name light-push-demo liuss/light-push:1.1.0 /mnt/data/start.sh`
+- 调试web界面 `sudo docker run -id -p 443:443 -p 80:80 --name light-push-demo -v /home/docker/nginx_web:/mnt/data/nginx_web liuss/light-push /mnt/data/start.sh`
 - 从宿主机拷贝文件到容器 `sudo docker cp ./dist light-push-demo:/mnt/data`
 - 从容器拷贝文件到宿主机 `sudo docker cp light-push-demo:/mnt/data/dist ./`
 
