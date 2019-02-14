@@ -71,11 +71,11 @@ sudo yum install -y nodejs
 ```
 - 安装pm2，如果安装中报错或者长时间没有响应 尝试通过第三方镜像安装 例如： `npm install -g pm2 --registry=https://registry.npm.taobao.org`
 ```
-npm install -g pm2
+sudo npm install -g pm2
 ```
 - 安装redis 5.0 以上版本 [官网](http://redis.io/download) [安装步骤](http://blog.csdn.net/zhenzhendeblog/article/details/52161515)
 >`src/config.yaml` 中的 `redis_address` 用来配置redis服务器地址 ， 如果redis是集群模式，则将该配置改为数组类型
-- 安装nginx集群部署时需要，[yum源](http://nginx.org/en/linux_packages.html#stable)
+- 安装nginx集群部署时需要，[yum源](http://nginx.org/en/linux_packages.html#RHEL-CentOS)
 ```
 yum install nginx
 ```
@@ -85,6 +85,27 @@ yum install nginx
 
 - 通过`node`命令启动服务，则端口配置见 `src/config.yaml` ， `connector_port` : 连接服务器； `logic_port` : 接口服务器；如果通过`pm2`方式启动，则`app.json` 中 `args` 有 `-p` 参数，则会覆盖 `src/config.yaml` 中端口配置
 
+### 性能调优
+详情见 `doc/performance.md`
+
+### 客户端模拟测试
+- 执行测试：`nohup node --max-old-space-size=3000 benchmark.js >> test1.log 2>&1 &`
+- 根据具体情况调整 `test/benchmark.yaml` 测试配置，主要调整的参数：server，push_option_path，client_namespace，client_total，client_uuid_init
+- 配置参数 `client_uuid_init` 需要在每次启动测试实例时手动修改，一般为现有在线客户端数 + `client_total`
+- 开始测试之前需要手动修改 `/etc/sysctl.conf` ,增加如下配置
+  ```
+  fs.file-max=100000
+  fs.nr_open=100000
+  net.ipv4.ip_local_port_range=1024 65000
+  ```
+- 在推出测试终端时必须通过 `exit` 命令退出，否则后台测试进程会被系统kill
+
+### 并发测试
+- 安装测试工具 `yum install httpd-tools -y`
+- 执行测试见 `test/ab.txt`
+- 根据情况修改测试请求内容 `test/ab_post`
+
+### 其他
 
 > 接口说明和注意事项见[wiki](https://github.com/liutian/light-push/wiki)
 

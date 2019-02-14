@@ -2,7 +2,7 @@
 
 ### 制作基础镜像
 
-1. 首先找一个干净的centos系统(以7.3为例)，并安装镜像制作工具 supermin
+1. 首先找一个干净的centos系统(以7.6为例)，并安装镜像制作工具 supermin
 - `sudo yum install -y supermin*`
 2. 基于当前系统进行编译
 - `supermin5 -v --prepare yum -o supermin.d`
@@ -19,8 +19,9 @@
 8. 修改yum系统版本变量
 - `echo 7 > /etc/yum/vars/releasever`
 9. 安装epel源
+- `yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && yum clean all` 或者下面
 - `yum install -y epel-release && yum clean all`
-10. 安装基本依赖,并新建 /etc/init.d/functions  文件
+1.  安装基本依赖,并新建 /etc/init.d/functions  文件
 - `yum install -y bash coreutils lsof systemd vim-enhanced wget unzip make gcc-c++ `
 11. 容器导出镜像
 - `sudo docker export centos7-base -o centos7.tar`
@@ -30,21 +31,29 @@
 ### 制作推送服务器镜像
 
 1. 导入基础镜像
-- `sudo cat centos7.tar | sudo docker import - liuss/centos-7.3`
+- `sudo cat centos7.tar | sudo docker import - liuss/centos-7.6`
 2. 创建容器
-- `sudo docker run -id --name light-push --privileged liuss/centos-7.3 init`
+- `sudo docker run -id --name light-push --privileged liuss/centos-7.6 init`
 3. 进入容器
 - `sudo docker exec -it light-push /bin/bash`
 4. 安装nodejs
-- `curl --silent --location https://rpm.nodesource.com/setup_8.x | bash - && yum install -y nodejs`
+- `curl --silent --location https://rpm.nodesource.com/setup_11.x | bash - && yum install -y nodejs`
 5. 安装pm2
 - `npm install pm2 -g`
 6. 安装nginx，并修改nginx配置文件(详情见项目doc/nginx)
+- 添加nginx[yum源](http://nginx.org/en/linux_packages.html#RHEL-CentOS)
 - `yum install -y nginx`
 7. 安装redis，并修改redis配置文件(后台运行，工作目录)
-- `wget http://download.redis.io/releases/redis-4.0.0.tar.gz && tar xzf redis-4.0.0.tar.gz && cd redis-4.0.0 && make && make install && cp redis.conf /etc/redis.conf`
+- `cd /usr/local/src && wget http://download.redis.io/releases/redis-5.0.3.tar.gz && tar xzf redis-5.0.3.tar.gz && cd redis-5.0.3 && make distclean && make && yum install -y tcl && make test && cp redis.conf /etc/redis.conf`
+- 修改 `/etc/redis.conf` 配置如下
+  ```
+  bind 127.0.0.1
+  daemonize yes
+  logfile "/var/log/redis/6379.log"
+  dir /mnt/data/db/redis
+  ```
 8. 创建目录
-- `mkdir -p /mnt/data/code/server && mkdir -p /mnt/data/db/redis && mkdir -p /mnt/data/code/web && mkdir -p /mnt/data/nginx_web/light-push-admin `
+- `mkdir-p /var/log/redis && mkdir -p /mnt/data/code/server && mkdir -p /mnt/data/db/redis && mkdir -p /mnt/data/code/web && mkdir -p /mnt/data/nginx_web/light-push-admin `
 9. 下载服务器端源码
 - `cd /mnt/data/code && wget https://github.com/liutian/light-push/archive/master.zip && unzip master.zip -d server && rm master.zip`
 10. 安装服务器端依赖
@@ -62,17 +71,18 @@ cd /mnt/data/code/server/light-push-master
 /usr/bin/pm2 start app.json
 /bin/bash
 ```
-14. 导出镜像
+14. 服务器端调优见 `doc/performance.md`
+15. 导出镜像
 - `sudo docker export light-push -o light-push.tar`
-15. 导入镜像
+16. 导入镜像
 - `sudo cat light-push.tar | sudo docker import - liuss/light-push:1.0.0`
-16. 上传镜像到docker hub(需要先执行登录)
+17. 上传镜像到docker hub(需要先执行登录)
 - `docker light-push liuss/light-push:1.0.0`
 
 
 ### 基于推送服务器镜像创建容器
 - `docker run -id -p 443:443 --name light-push-demo liuss/light-push:<version> /mnt/data/start.sh` 需要将 `version` 改成对应的版本号
-- 调试web界面 `docker run -id -p 443:443 --name light-push-demo -v /home/docker/nginx_web:/mnt/data/nginx_web liuss/light-push /mnt/data/start.sh` 
+- 调试web界面 `docker run -id -p 443:443 --name light-push-demo -v /home/docker/nginx_web:/mnt/data/nginx_web liuss/light-push /mnt/data/start.sh`
 - 从宿主机拷贝文件到容器 `sudo docker cp ./dist light-push-demo:/mnt/data`
 - 从容器拷贝文件到宿主机 `sudo docker cp light-push-demo:/mnt/data/dist ./`
 

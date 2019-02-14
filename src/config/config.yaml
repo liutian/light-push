@@ -2,8 +2,10 @@
 
 default: &default
   socket_ip: 127.0.0.1
+  #socket_ip: 0.0.0.0
   socket_port: 21314
   logic_ip: 127.0.0.1
+  #logic_ip: 0.0.0.0
   logic_port: 56789
 
   transports:
@@ -14,11 +16,11 @@ default: &default
 
 
   redis_address: '127.0.0.1:6379'
-  redis_password: 
+  redis_password:
 #    - 127.0.0.1:10010
 #    - 127.0.0.1:10020
   redis_prefix: p_
-  
+
   key_reg: '^[\\\w.\\\d\-$#/]+$'                                         #命名空间 房间  userid  uuid 正则
 
   room_activity_broadcast: true                                                    #进入或者离开房间时是否需要向房间广播该变动

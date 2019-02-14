@@ -1,20 +1,11 @@
 {
-	"room": "33dd",
-	"namespace": "/demo",
-	"ack": true,
-	"apnsName": "iosAppName2",
-	"apnsEnv": "dev",
+	"room": "w-room",
+  "leaveMessage": false,
+  "expire": 1,
 	"pushData": {
-		"apsData": {
-			"aps": {
-				"alert": "ffffffffff"
-			}
-		},
-		"pushType": 1,
-		"messageVo": {
-			"messageContent": "sdfdfss是地方地方是水电费adsads",
-			"messageType": "text"
+		"message": {
+			"content": "测试数据123456",
+			"contentType": "text"
 		}
-
 	}
 }
