@@ -39,10 +39,10 @@ root hard nofile 1000000
 
 ### nginx 调优
 - `worker_processes 3` 配置nginx创建合适的进程数来提供服务（一般为cpu数量 -1 ）
-- `events --> worker_connections 60000` 配置nginx每个进程可以接收的最大连接数
+- `events --> worker_connections 100000` 配置nginx每个进程可以接收的最大连接数
 - `http --> request_pool_size 1k` 每个请求分配的内存大小
 - `http --> access_log off` 关闭访问日子记录
-- `worker_rlimit_nofile 60000` 配置nginx每个进程可以打开的最大文件数
+- `worker_rlimit_nofile 100000` 配置nginx每个进程可以打开的最大文件数
 > 切记 `worker_connections` 和 `worker_rlimit_nofile` 不宜过大，否则nginx在启动时会占用过多系统内存
 
 ### 调优

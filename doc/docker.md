@@ -44,9 +44,11 @@
 - `curl --silent --location https://rpm.nodesource.com/setup_11.x | bash - && yum install -y nodejs`
 7. 安装pm2
 - `npm install pm2 -g`
-8. 安装nginx，并修改nginx配置文件(详情见项目doc/nginx)
+8. 安装nginx
 - 添加nginx[yum源](http://nginx.org/en/linux_packages.html#RHEL-CentOS)
 - `yum install -y nginx`
+- `rm -rf /etc/nginx/conf.d/default.conf`
+- 修改nginx配置文件(详情见项目doc/nginx)
 9. 安装redis，并修改redis配置文件(后台运行，工作目录)
 - `cd /usr/local/src && wget http://download.redis.io/releases/redis-5.0.3.tar.gz && tar xzf redis-5.0.3.tar.gz && cd redis-5.0.3 && make distclean && make && yum install -y tcl && make test && cp redis.conf /etc/redis.conf`
 - 修改 `/etc/redis.conf` 配置如下
@@ -57,7 +59,7 @@
   dir /mnt/data/db/redis
   ```
 10. 创建目录
-- `mkdir-p /var/log/redis && mkdir -p /mnt/data/code/server && mkdir -p /mnt/data/db/redis && mkdir -p /mnt/data/code/web && mkdir -p /mnt/data/nginx_web/light-push-admin `
+- `mkdir -p /var/log/redis && mkdir -p /mnt/data/code/server && mkdir -p /mnt/data/db/redis && mkdir -p /mnt/data/code/web && mkdir -p /mnt/data/nginx_web/light-push-admin `
 11. 下载服务器端源码
 - `cd /mnt/data/code && wget https://github.com/liutian/light-push/archive/master.zip && unzip master.zip -d server && rm master.zip`
 12. 安装服务器端依赖
@@ -76,19 +78,19 @@ cd /mnt/data/code/server/light-push-master
 /bin/bash
 ```
 >修改权限 `chmod u+x /mnt/data/start.sh`
-
-16. 验证服务 `curl http://127.0.0.1:21314/socket.io/socket.io.js`
-17. 服务器端调优见 `doc/performance.md`
-18. 导出镜像
+16. 开启服务 `/mnt/data/start.sh`
+17. 验证服务 `curl http://127.0.0.1:21314/socket.io/socket.io.js`
+18. 服务器端调优见 `doc/performance.md`
+19. 导出镜像
 - `sudo docker export light-push -o light-push.tar`
-19. 导入镜像
+20. 导入镜像
 - `sudo cat light-push.tar | sudo docker import - liuss/light-push:1.1.0`
-20. 上传镜像到docker hub(需要先执行登录)
+21. 上传镜像到docker hub(需要先执行登录)
 - `sudo docker push liuss/light-push:1.1.0`
 
 
 ### 基于推送服务器镜像创建容器
-- `sudo docker run -id -p 443:443 -p 80:80 -v ~/redis-db:/mnt/data/db/redis --name light-push-demo liuss/light-push:1.1.0 /mnt/data/start.sh`
+- `sudo docker run --restart=always -id -p 443:443 -p 80:80 -v ~/redis-db:/mnt/data/db/redis --name light-push-demo liuss/light-push:1.1.0 /mnt/data/start.sh`
 - 调试web界面 `sudo docker run -id -p 443:443 -p 80:80 --name light-push-demo -v /home/docker/nginx_web:/mnt/data/nginx_web liuss/light-push /mnt/data/start.sh`
 - 从宿主机拷贝文件到容器 `sudo docker cp ./dist light-push-demo:/mnt/data`
 - 从容器拷贝文件到宿主机 `sudo docker cp light-push-demo:/mnt/data/dist ./`
