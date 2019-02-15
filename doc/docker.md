@@ -3,7 +3,7 @@
 ### 制作基础镜像
 
 1. 首先找一个干净的centos系统(以7.6为例)，并安装镜像制作工具 supermin
-- `sudo yum install -y supermin*`
+- `sudo yum install -y supermin5 supermin5-devel `
 2. 基于当前系统进行编译
 - `supermin5 -v --prepare yum -o supermin.d`
 3. 基于编译进行构建
@@ -19,7 +19,7 @@
 8. 修改yum系统版本变量
 - `echo 7 > /etc/yum/vars/releasever`
 9. 安装epel源
-- `yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && yum clean all` 或者下面
+- `yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm -y && yum clean all` 或者下面
 - `yum install -y epel-release && yum clean all`
 1.  安装基本依赖,并新建 /etc/init.d/functions  文件
 - `yum install -y bash coreutils lsof systemd vim-enhanced wget unzip make gcc-c++ `
@@ -88,7 +88,7 @@ cd /mnt/data/code/server/light-push-master
 
 
 ### 基于推送服务器镜像创建容器
-- `sudo docker run -id -p 443:443 -p 80:80 --name light-push-demo liuss/light-push:1.1.0 /mnt/data/start.sh`
+- `sudo docker run -id -p 443:443 -p 80:80 -v ~/redis-db:/mnt/data/db/redis --name light-push-demo liuss/light-push:1.1.0 /mnt/data/start.sh`
 - 调试web界面 `sudo docker run -id -p 443:443 -p 80:80 --name light-push-demo -v /home/docker/nginx_web:/mnt/data/nginx_web liuss/light-push /mnt/data/start.sh`
 - 从宿主机拷贝文件到容器 `sudo docker cp ./dist light-push-demo:/mnt/data`
 - 从容器拷贝文件到宿主机 `sudo docker cp light-push-demo:/mnt/data/dist ./`
