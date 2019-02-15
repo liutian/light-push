@@ -34,16 +34,20 @@
 - `sudo cat centos7.tar | sudo docker import - liuss/centos-7.6`
 2. 创建容器
 - `sudo docker run -id --name light-push --privileged liuss/centos-7.6 init`
-3. 进入容器
+3. 初始化系统必要组件
+- `sudo docker cp /usr/sbin/ss light-push:/usr/sbin`
+4. 进入容器
 - `sudo docker exec -it light-push /bin/bash`
-4. 安装nodejs
+5. 初始化系统
+- 设置时区 `cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo 'Asia/Shanghai' > /etc/timezone`
+6. 安装nodejs
 - `curl --silent --location https://rpm.nodesource.com/setup_11.x | bash - && yum install -y nodejs`
-5. 安装pm2
+7. 安装pm2
 - `npm install pm2 -g`
-6. 安装nginx，并修改nginx配置文件(详情见项目doc/nginx)
+8. 安装nginx，并修改nginx配置文件(详情见项目doc/nginx)
 - 添加nginx[yum源](http://nginx.org/en/linux_packages.html#RHEL-CentOS)
 - `yum install -y nginx`
-7. 安装redis，并修改redis配置文件(后台运行，工作目录)
+9. 安装redis，并修改redis配置文件(后台运行，工作目录)
 - `cd /usr/local/src && wget http://download.redis.io/releases/redis-5.0.3.tar.gz && tar xzf redis-5.0.3.tar.gz && cd redis-5.0.3 && make distclean && make && yum install -y tcl && make test && cp redis.conf /etc/redis.conf`
 - 修改 `/etc/redis.conf` 配置如下
   ```
@@ -52,17 +56,17 @@
   logfile "/var/log/redis/6379.log"
   dir /mnt/data/db/redis
   ```
-8. 创建目录
+10. 创建目录
 - `mkdir-p /var/log/redis && mkdir -p /mnt/data/code/server && mkdir -p /mnt/data/db/redis && mkdir -p /mnt/data/code/web && mkdir -p /mnt/data/nginx_web/light-push-admin `
-9. 下载服务器端源码
+11. 下载服务器端源码
 - `cd /mnt/data/code && wget https://github.com/liutian/light-push/archive/master.zip && unzip master.zip -d server && rm master.zip`
-10. 安装服务器端依赖
+12. 安装服务器端依赖
 - `cd /mnt/data/code/server/light-push-master && npm install `
-11. 下载web端源码
+13. 下载web端源码
 - `cd /mnt/data/code && wget https://github.com/liutian/light-push-admin/archive/master.zip && unzip master.zip -d web && rm master.zip`
-12. 安装web端依赖并执行构建任务,将src/environment目录下文件中 api 字段ip地址改为自己服务器的ip地址,如果是本地允许docker镜像则不需要修改ip，默认为127.0.0.1
+14. 安装web端依赖并执行构建任务,将src/environment目录下文件中 api 字段ip地址改为自己服务器的ip地址,如果是本地允许docker镜像则不需要修改ip，默认为127.0.0.1
 - `cd /mnt/data/code/web/light-push-admin-master && npm install && npm run build-docker && rm -rf /mnt/data/nginx_web/light-push-admin/*.* && cp -R dist/* /mnt/data/nginx_web/light-push-admin `
-13. 编写启动服务的脚本 `/mnt/data/start.sh`
+15. 编写启动服务的脚本 `/mnt/data/start.sh`
 ```
 #!/bin/sh
 /usr/sbin/nginx -c /etc/nginx/nginx.conf
@@ -73,13 +77,13 @@ cd /mnt/data/code/server/light-push-master
 ```
 >修改权限 `chmod u+x /mnt/data/start.sh`
 
-14. 验证服务 `curl http://127.0.0.1:21314/socket.io/socket.io.js`
-14. 服务器端调优见 `doc/performance.md`
-15. 导出镜像
+16. 验证服务 `curl http://127.0.0.1:21314/socket.io/socket.io.js`
+17. 服务器端调优见 `doc/performance.md`
+18. 导出镜像
 - `sudo docker export light-push -o light-push.tar`
-16. 导入镜像
+19. 导入镜像
 - `sudo cat light-push.tar | sudo docker import - liuss/light-push:1.1.0`
-17. 上传镜像到docker hub(需要先执行登录)
+20. 上传镜像到docker hub(需要先执行登录)
 - `sudo docker push liuss/light-push:1.1.0`
 
 

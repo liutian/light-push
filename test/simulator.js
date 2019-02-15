@@ -5,7 +5,7 @@ const inspect = require('util').inspect;
 const socketClient = require('socket.io-client');
 
 
-const CONFIG_PATH = '/benchmark.yaml';
+const CONFIG_PATH = '/simulator.yaml';
 let config = yaml.safeLoad(fs.readFileSync(__dirname + CONFIG_PATH));
 config = argv.e ? config[argv.e] : config.default;
 

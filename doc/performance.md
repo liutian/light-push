@@ -32,9 +32,9 @@ root hard nofile 1000000
 > 修改配置文件需要重新登陆并重新启动进程才能生效
 
 ### nginx 调优
-- `worker_processes` 配置nginx创建合适的进程数来提供服务（一般为cpu数量 -1 ）
+- `worker_processes 3` 配置nginx创建合适的进程数来提供服务（一般为cpu数量 -1 ）
 - `events --> worker_connections 60000` 配置nginx每个进程可以接收的最大连接数
-- `worker_rlimit_nofile 30000` 配置nginx每个进程可以打开的最大文件数
+- `worker_rlimit_nofile 60000` 配置nginx每个进程可以打开的最大文件数
 - `events --> use epoll` 用这个模型可以高效的处理异步事件
 - `http --> keepalive_timeout 60` 功能是使客户端到服务器端的连接在设定的时间内持续有效，当出现对服务器的后继请求时，该功能避免了建立或者重新建立连接
 - `http --> nodelay on` 告诉nginx不要缓存数据，而是一段一段的发送.当需要及时发送数据时，就应该给应用设置这个属性
@@ -42,10 +42,12 @@ root hard nofile 1000000
 
 ### 监控
 ```
-ss -s 显示概要信息
-ss -tln 查看主机监听端口
-ss -tlp 查看监听端口的程序名称
-ss state <state-name> | wc -l 查看处于不同状态的连接总数
-ss dst *:80 | wc -l 查看连接主机80端口的连接总数
+ss -s #显示概要信息
+ss -tln #查看主机监听端口
+ss -tlp #查看监听端口的程序名称
+ss state <state-name> | wc -l #查看处于不同状态的连接总数
+ss dst *:80 | wc -l #查看连接主机80端口的连接总数
+lsof -p <进程号> | wc -l #查看某个进程打开的文件总数
+lsof -n|awk '{print $2}'|sort|uniq -c|sort -nr|more #统计所有进程打开的文件总数
 ```
 

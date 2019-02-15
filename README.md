@@ -89,8 +89,8 @@ yum install nginx
 详情见 `doc/performance.md`
 
 ### 客户端模拟测试
-- 执行测试：`nohup node --max-old-space-size=3000 benchmark.js >> test1.log 2>&1 &`
-- 根据具体情况调整 `test/benchmark.yaml` 测试配置，主要调整的参数：server，push_option_path，client_namespace，client_total，client_uuid_init
+- 执行测试：`nohup node --max-old-space-size=3000 simulator.js >> test1.log 2>&1 &`
+- 根据具体情况调整 `test/simulator.yaml` 测试配置，主要调整的参数：server，push_option_path，client_namespace，client_total，client_uuid_init
 - 配置参数 `client_uuid_init` 需要在每次启动测试实例时手动修改，一般为现有在线客户端数 + `client_total`
 - 开始测试之前需要手动修改 `/etc/sysctl.conf` ,增加如下配置
   ```
