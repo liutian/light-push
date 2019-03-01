@@ -31,7 +31,7 @@
 - 服务运行时的各个参数可自行配置，比如消息默认失效时间，房间名最大长度等等
 
 ### 快速体验
-- `docker run -id -p 443:443 --name light-push-demo liuss/light-push:<version> /mnt/data/start.sh` 需要将 `version` 改成对应的版本号
+- `docker run -id -p 80:80 --name light-push-demo liuss/light-push:<version> /mnt/data/start.sh` 需要将 `version` 改成对应的版本号
 - 访问管理页面: `https://127.0.0.1` 登录名 admin 密码 123456  勾选管理员选项
 - [在线体验](https://39.104.57.212:55555)
 
