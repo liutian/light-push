@@ -15,6 +15,18 @@ location /push-logic/ {
   proxy_pass http://logic_nodes/;
   #proxy_redirect http://logic_nodes/ http://$host:$server_port/push-logic/;
   proxy_next_upstream error timeout http_500 http_502 http_503 http_504;
+  
+  if ($request_method = OPTIONS) {
+    add_header Access-Control-Allow-Origin "$http_origin";
+    add_header Access-Control-Allow-Credentials "true";
+    add_header Access-Control-Allow-Methods "GET, POST, OPTIONS";
+    add_header Access-Control-Allow-Headers "authorization,Content-Type,Accept,Origin,User-Agent,Cache-Control,Keep-Alive,X-Requested-With,If-Modified-Since";
+
+    add_header Access-Control-Max-Age 1728000; # 20 天
+    add_header Content-Length 0;
+    add_header Content-Type text/plain;
+    return 200;
+  }
 }
 
 location /push-admin {
