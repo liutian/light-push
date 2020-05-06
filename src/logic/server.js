@@ -30,7 +30,7 @@ module.exports = function (router) {
 
   router.post('/api/admin/login', login);
   router.post('/api/auth/login', login);
-  router.post('/health', health);
+  router.get('/health', health);
 
   router.post('/api/auth/room-leave-message', roomLeaveMessage);
   router.post('/api/admin/namespace/clear-realtime-data', clearRealtimeData);
