@@ -20,6 +20,11 @@ require('./transfer');
 
 //启动服务器
 const server = http.Server(function (req, res) {
+  if (req.url === '/health') {
+    res.end('hello');
+    return;
+  }
+
   res.writeHead(404);
   res.end();
 }).listen(config.port, config.ip, function (err) {

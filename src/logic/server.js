@@ -30,7 +30,7 @@ module.exports = function (router) {
 
   router.post('/api/admin/login', login);
   router.post('/api/auth/login', login);
-  router.post('/hello', hello);
+  router.post('/health', health);
 
   router.post('/api/auth/room-leave-message', roomLeaveMessage);
   router.post('/api/admin/namespace/clear-realtime-data', clearRealtimeData);
@@ -41,8 +41,8 @@ module.exports = function (router) {
 
 
 //*******************************************************************
-async function hello(ctx) {
-  ctx.body = { time: new Date() };
+async function health(ctx) {
+  ctx.body = 'hello';
 }
 
 async function login(ctx, next) {
