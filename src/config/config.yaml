@@ -1,7 +1,7 @@
 ---
 
 default: &default
-  #socket_ip: 127.0.0.1
+  # socket_ip: 127.0.0.1
   socket_ip: 0.0.0.0
   socket_port: 21314
   #logic_ip: 127.0.0.1
@@ -55,3 +55,8 @@ dev:
 
   transports:
     - websocket
+
+sit:
+  << : *default
+
+  redis_address: '10.88.26.213:6379'
