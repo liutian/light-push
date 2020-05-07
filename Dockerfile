@@ -10,4 +10,4 @@ ADD  ./src  /opt/project
 Add  ./package.json /opt/project
 Add  ./startup.sh /opt/project
 RUN yarn install
-ENTRYPOINT ["sh", "startup.sh", $APP_NAME , $ENV_NAME]
+ENTRYPOINT sh startup.sh $APP_NAME $ENV_NAME
