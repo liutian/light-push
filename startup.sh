@@ -12,4 +12,4 @@ main_path="./src/logic/index.js"
 port=10003
 fi
 
-node ${main_path} >> ${output_path} -p ${port} -e ${env} --log_path ${log_path} 2>&1
+node ${main_path} -p ${port} -e ${env} --log_path ${log_path}
