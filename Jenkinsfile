@@ -43,7 +43,7 @@ pipeline {
 	stages {
 
         stage('打包&上传镜像') {
-            when { anyOf{ branch 'release';branch 'master';branch 'dev'} }
+            when { anyOf{ branch 'release';branch 'master';branch 'develop'} }
             steps {
                 timeout(time: 20, unit: 'MINUTES') {
                     sh '''
