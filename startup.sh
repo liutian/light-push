@@ -12,5 +12,6 @@ elif [[ $app == "push-logic" ]];then
   port=10003
 fi
 
+mkdir ${log_path}
 echo "main_path: ${main_path}   port:${port}   env:${env}   log_path:${log_path}"
 node ${main_path} -p ${port} -e ${env} --log_path ${log_path}
