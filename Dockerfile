@@ -1,5 +1,5 @@
-ARG ENV_NAME
 ARG APP_NAME
+ARG ENV_NAME
 
 From ic-harbor.baozun.com/ic/alpine-node10:v1.1
 
