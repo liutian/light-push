@@ -20,6 +20,7 @@ default: &default
 #    - 127.0.0.1:10010
 #    - 127.0.0.1:10020
   redis_prefix: p_
+  redis_db: 0
 
   key_reg: '^[\\\w.\\\d\-$#/]+$'                                         #命名空间 房间  userid  uuid 正则
 
@@ -60,3 +61,4 @@ sit:
   << : *default
 
   redis_address: '10.88.26.213:6379'
+  redis_db: 5
