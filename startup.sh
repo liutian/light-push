@@ -1,5 +1,7 @@
-app=${1:-"push-socket"}
+app=${1}
 env=${2:-"sit"}
+
+echo "app: ${app}"
 
 output_path="/service/logs/app/${env}/oms4/${app}/output.log"
 log_path="/service/logs/app/${env}/oms4/${app}/"
