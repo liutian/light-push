@@ -57,6 +57,9 @@ pipeline {
 
                         for app in $APP_NAME;do
                           docker images  --filter="reference=${HARBOR_ADDR}/${envname}/${PROJECT_NAME}_${app}:*" -q | xargs --no-run-if-empty docker rmi --force
+
+                          echo "app:    ${app}    envname:    ${envname}"
+
                           docker build --no-cache --build-arg APP_NAME=${app} --build-arg ENV_NAME=${envname} -t ${HARBOR_ADDR}/${envname}/${PROJECT_NAME}_${app}:${GIT_COMMIT:0:7} -f  ${DOCKER_NAME} ./
                           docker push ${HARBOR_ADDR}/${envname}/${PROJECT_NAME}_${app}:${GIT_COMMIT:0:7}
                         done
