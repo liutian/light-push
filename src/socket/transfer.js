@@ -1,4 +1,3 @@
-const UUID = require('node-uuid');
 const log4js = require('log4js');
 
 const config = require('../config');
