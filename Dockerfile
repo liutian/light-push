@@ -6,6 +6,7 @@ WORKDIR  /opt/project
 ADD  ./src  /opt/project/src
 Add  ./package.json /opt/project
 Add  ./startup.sh /opt/project
-RUN yarn install
+Add  ./node_modules.tar.gz /opt/project
+RUN  tar -zxf node_modules.tar.gz
 
 ENTRYPOINT sh startup.sh
