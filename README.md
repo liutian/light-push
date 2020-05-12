@@ -4,7 +4,7 @@
 ### 前言
 随着互联网网速的不断提升，即时消息通信的应用场景越来越多。我在参与公司多个产品的研发中，不止一次的遇到需要集成聊天功能的需求。既然是聊天就必须把消息尽快送达目标用户，做的多了就有了一套自己的经验和想法，然后借着闲暇时间一点点的就写出了这个项目。这个项目灵感来源于实际开发工作，同时又把它应用到自己的工作中。希望它能帮到你，也希望你能给我更多的反馈和改进意见，让它帮助更多的人。
 
-<img src="https://raw.githubusercontent.com/liutian/light-push-admin/master/doc/manual-1.gif" />
+<img src="./assets/demo.gif" />
 
 ### 系统概要和功能特性
 - 业务系统通过`restful`接口方式调用推送服务
@@ -31,8 +31,8 @@
 - 服务运行时的各个参数可自行配置，比如消息默认失效时间，房间名最大长度等等
 
 ### 快速体验
-- `sudo docker run -id -p 443:443 -p 80:80 --name light-push-demo liuss/light-push:1.2.0 /mnt/data/start.sh` 
-- 访问管理页面: `https://127.0.0.1/push-admin` 登录名 admin 密码 123456 
+- `sudo docker run -id -p 443:443 -p 80:80 --name light-push-demo liuss/light-push:1.2.0 /mnt/data/start.sh`
+- 访问管理页面: `https://127.0.0.1/push-admin` 登录名 admin 密码 123456
 
 ### 客户端调用(web)
 ```
