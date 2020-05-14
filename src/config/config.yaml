@@ -62,3 +62,9 @@ sit:
 
   redis_address: '10.88.26.213:6379'
   redis_db: 5
+
+uat:
+  << : *default
+
+  redis_address: '10.101.6.77:6379'
+  redis_db: 5
