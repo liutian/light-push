@@ -68,3 +68,11 @@ uat:
 
   redis_address: '10.101.6.77:6379'
   redis_db: 5
+
+prod: 
+  << : *default
+  sentinels_name: 'sentinel-10.11.12.43-28031'
+  sentinels:
+    - 'redis-prod-04.cloud.bz:28026'
+    - 'redis-prod-05.cloud.bz:28034'
+    - 'redis-prod-06.cloud.bz:28032'
