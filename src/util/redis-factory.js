@@ -32,12 +32,23 @@ function create() {
     connection = new Redis.Cluster(addressArr, options);
   } else {
     var options = {
-      host: config.redis_address.split(':')[0],
-      port: config.redis_address.split(':')[1],
       keyPrefix: config.redis_prefix,
-      password: config.redis_password,
       db: config.redis_db
     };
+
+    if (Array.isArray(config.sentinels)) {
+      const addressArr = config.sentinels.map(function (item) {
+        return { host: item.split(':')[0], port: item.split(':')[1] };
+      });
+      options.sentinels = addressArr;
+      options.name = config.sentinels_name;
+    } else {
+      options = Object.assign(options, {
+        host: config.redis_address.split(':')[0],
+        port: config.redis_address.split(':')[1],
+        password: config.redis_password,
+      })
+    }
 
     connection = new Redis(options);
   }
