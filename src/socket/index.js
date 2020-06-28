@@ -25,6 +25,7 @@ const server = http.Server(function (req, res) {
     return;
   }
 
+  res.setHeader('from', 'light-push');
   res.writeHead(404);
   res.end();
 }).listen(config.port, config.ip, function (err) {
