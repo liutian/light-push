@@ -83,6 +83,7 @@ async function cors(ctx, next) {
 
   await next();
 
+  ctx.set('from', 'light-push');
   //只需要检查options类型的请求，因为系统所有接口的Content-Type都为application/json，所有浏览器肯定会先发送预检请求
   ctx.set('Access-Control-Allow-Origin', ctx.get('Origin'));
   ctx.set('Access-Control-Allow-Credentials', true);
