@@ -5,7 +5,10 @@
 const config = require('../config');
 config.port = config.port || config.logic_port || 56789;
 config.ip = config.ip || config.logic_ip || '127.0.0.1';
-config.log_prefix = 'logic_' + config.ip + ':' + config.port;
+
+if (!config.log_prefix) {
+  config.log_prefix = 'logic_' + config.ip + ':' + config.port;
+}
 //启动日志服务
 require('../config/log4j-config');
 
