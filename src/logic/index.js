@@ -33,7 +33,7 @@ app.use(router.routes());
 
 //启动服务
 app.listen(config.port, config.ip, function (err) {
-  console.log('logic serving at ' + config.ip + ':' + config.port);
+  console.warn('logic serving at ' + config.ip + ':' + config.port);
 });
 
 

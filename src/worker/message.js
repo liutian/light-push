@@ -34,7 +34,7 @@ const resultSeparator = '  >>>>  ';
 
 setTimeout(function () {
   init();
-  console.log('worker message starting ...');
+  console.warn('worker message starting ...');
 }, 3000);
 
 
