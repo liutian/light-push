@@ -6,7 +6,7 @@ const config = require('../config');
 config.port = config.port || config.logic_port || 56789;
 config.ip = config.ip || config.logic_ip || '127.0.0.1';
 
-if (!config.log_prefix) {
+if (config.log_prefix === '$ip_port$') {
   config.log_prefix = 'logic_' + config.ip + ':' + config.port;
 }
 //启动日志服务
