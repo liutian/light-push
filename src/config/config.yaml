@@ -64,6 +64,7 @@ sit:
   log_path: /service/logs/app/sit/oms4/push-socket
   redis_address: '10.88.26.213:6379'
   redis_db: 5
+  log_prefix: 
 
 uat:
   << : *default
@@ -71,10 +72,12 @@ uat:
   log_path: /service/logs/app/uat/oms4/push-socket
   redis_address: '10.101.6.77:6379'
   redis_db: 5
+  log_prefix:
 
 prod: 
   << : *default
 
+  log_prefix:
   log_path: /service/logs/app/prod/oms4/push-socket
   sentinels_name: 'sentinel-10.11.12.43-28031'
   sentinels:
