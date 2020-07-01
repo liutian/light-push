@@ -7,7 +7,10 @@ const argv = require('yargs').argv;
 
 // 加载配置信息
 const config = require('../config');
-config.log_prefix = 'worker_message_' + (argv.n || '');
+
+if (!config.log_prefix) {
+  config.log_prefix = 'worker_message_' + (argv.n || '');
+}
 //启动日志服务
 require('../config/log4j-config');
 
