@@ -1,22 +1,40 @@
 {
   "appenders": {
-    "file": {
+    "error-file": {
       "type": "file",
-      "filename": "log/debug.log",
+      "layout": {
+        "type": "json"
+      },
+      "filename": "log/error.log",
       "maxLogSize": 10485760,
       "backups": 1
     },
-    "dateFile": {
-      "type": "dateFile",
-      "filename": "log/out.log",
-      "pattern": "MM-dd.log"
+    "error": {
+      "type": "logLevelFilter",
+      "appender": "error-file",
+      "level": "error"
+    },
+    "warn-file": {
+      "type": "file",
+      "layout": {
+        "type": "json"
+      },
+      "filename": "log/warn.log",
+      "maxLogSize": 10485760,
+      "backups": 1
+    },
+    "warn": {
+      "type": "logLevelFilter",
+      "appender": "warn-file",
+      "level": "warn",
+      "maxLevel ": "warn"
     }
   },
   "categories": {
     "default": {
       "appenders": [
-        "file",
-        "dateFile"
+        "warn",
+        "error"
       ],
       "level": "warn"
     }

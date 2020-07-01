@@ -23,4 +23,22 @@ Object.keys(log4jConfig.appenders).forEach(function (key) {
   }
 });
 
+
+log4js.addLayout('json', function (config) {
+  return function (logEvent) {
+    const time = logEvent.startTime;
+
+    const log = {
+      timestamp: time.toISOString().substr(0, 10) + ' ' + time.toTimeString().substr(0, 8) + ':' + time.getMilliseconds(),
+      level: logEvent.level.levelStr.toLowerCase(),
+      project_name: 'oms4',
+      category: logEvent.categoryName,
+      msg: logEvent.data.join(' , ')
+    }
+
+    return JSON.stringify(log);
+  }
+});
+
+
 log4j.configure(log4jConfig);
