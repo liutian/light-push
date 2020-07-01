@@ -52,3 +52,7 @@ log4j.addLayout('json', function (config) {
 
 
 log4j.configure(log4jConfig);
+
+const logger = log4js.getLogger('console');
+console.warn = logger.warn.bind(logger);
+console.error = logger.error.bind(logger);
