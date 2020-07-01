@@ -5,7 +5,7 @@
       "layout": {
         "type": "json"
       },
-      "filename": "/service/logs/app/prod/oms4/push-socket/error.log",
+      "filename": "error.log",
       "maxLogSize": 10485760,
       "backups": 1
     },
@@ -19,7 +19,7 @@
       "layout": {
         "type": "json"
       },
-      "filename": "/service/logs/app/prod/oms4/push-socket/warn.log",
+      "filename": "warn.log",
       "maxLogSize": 10485760,
       "backups": 1
     },
