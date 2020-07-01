@@ -27,7 +27,7 @@
       "type": "logLevelFilter",
       "appender": "warn-file",
       "level": "warn",
-      "maxLevel ": "warn"
+      "maxLevel": "warn"
     }
   },
   "categories": {
