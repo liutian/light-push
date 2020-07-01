@@ -8,7 +8,7 @@ const argv = require('yargs').argv;
 // 加载配置信息
 const config = require('../config');
 
-if (!config.log_prefix) {
+if (config.log_prefix === '$ip_port$') {
   config.log_prefix = 'worker_message_' + (argv.n || '');
 }
 //启动日志服务

@@ -50,6 +50,7 @@ default: &default
   admin_passwd: 123456
 
   log_path:
+  log_prefix: $ip_port$
 
 dev:
   << : *default
