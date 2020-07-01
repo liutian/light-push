@@ -29,7 +29,7 @@ const server = http.Server(function (req, res) {
   res.writeHead(404);
   res.end();
 }).listen(config.port, config.ip, function (err) {
-  console.log('socket-io serving at ' + config.ip + ':' + config.port);
+  console.warn('socket-io serving at ' + config.ip + ':' + config.port);
 });
 server.setMaxListeners(20);
 
