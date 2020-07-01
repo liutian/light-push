@@ -10,17 +10,27 @@ const log4jConfig = require('./log4j-config.json');
  */
 Object.keys(log4jConfig.appenders).forEach(function (key) {
   let appender = log4jConfig.appenders[key];
-  if (!appender.filename) return;
+  let filename = appender.filename;
 
-  let separatorIndex = appender.filename.lastIndexOf('/');
-  if (separatorIndex != -1) {
-    let arr = Array.from(appender.filename);
-    arr.splice(separatorIndex + 1, 0, config.log_prefix + '_');
-    appender.filename = arr.join('');
-    if (config.log_path) {//默认路径为程序入口主文件所在目录
-      appender.filename = path.resolve(config.log_path + '/' + appender.filename);
+  if (!filename) return;
+
+  if (config.log_prefix) {
+    let separatorIndex = filename.lastIndexOf('/');
+
+    if (separatorIndex != -1) {
+      let arr = Array.from(filename);
+      arr.splice(separatorIndex + 1, 0, config.log_prefix + '_');
+      filename = arr.join('');
+    } else {
+      filename = config.log_prefix + '_' + filename;
     }
   }
+
+  if (config.log_path) {//默认路径为程序入口主文件所在目录
+    filename = path.resolve(config.log_path + '/' + filename);
+  }
+
+  appender.filename = filename
 });
 
 
