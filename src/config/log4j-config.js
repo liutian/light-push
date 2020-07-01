@@ -34,7 +34,7 @@ Object.keys(log4jConfig.appenders).forEach(function (key) {
 });
 
 
-log4js.addLayout('json', function (config) {
+log4j.addLayout('json', function (config) {
   return function (logEvent) {
     const time = logEvent.startTime;
 
