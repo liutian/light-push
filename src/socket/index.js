@@ -3,7 +3,7 @@
 
 const os = require('os');
 const engine = require('engine.io');
-engine.Server.errorMonitor[1] = `Session ID unknown [hostname:${os.hostname()}]`;
+engine.Server.errorMessages[1] = `Session ID unknown [hostname:${os.hostname()}]`;
 
 // 加载配置信息
 const config = require('../config');
