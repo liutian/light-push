@@ -1,6 +1,10 @@
 //提高异步执行的性能
 //global.Promise = require('bluebird');
 
+const os = require('os');
+const engine = require('engine.io');
+engine.Server.errorMonitor[1] = `Session ID unknown [hostname:${os.hostname()}]`;
+
 // 加载配置信息
 const config = require('../config');
 config.port = config.port || config.socket_port || 21314;
