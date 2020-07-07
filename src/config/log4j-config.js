@@ -1,6 +1,6 @@
 let path = require('path');
 let log4j = require('log4js');
-let { parseDate } = require('util');
+let { parseDate } = require('../util/util');
 
 const config = require('./index');
 const log4jConfig = require('./log4j-config.json');
