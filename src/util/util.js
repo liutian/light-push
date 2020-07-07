@@ -17,6 +17,7 @@ exports.isBoolean = function (value) { return objProToString.call(value) == '[ob
 
 exports.isObject = function (value) { return objProToString.call(value) == '[object Object]' }
 
+exports.parseDate = parseDate;
 
 /*------------------------------------分割线 -----------------------------*/
 
@@ -48,3 +49,9 @@ function randomFn(size = 10) {
   });
 }
 
+function parseDate(date) {
+  return date.getFullYear() + '-' + (date.getMonth() + 1).toString().padStart(2, '0')
+    + '-' + date.getDate().toString().padStart(2, '0') + ' ' + date.getHours().toString().padStart(2, '0')
+    + ':' + date.getMinutes().toString().padStart(2, '0') + ':' + date.getSeconds().toString().padStart(2, '0')
+    + ':' + date.getMilliseconds().toString().padStart(3, '0');
+}

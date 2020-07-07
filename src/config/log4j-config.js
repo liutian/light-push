@@ -1,5 +1,6 @@
 let path = require('path');
 let log4j = require('log4js');
+let { parseDate } = require('util');
 
 const config = require('./index');
 const log4jConfig = require('./log4j-config.json');
@@ -36,10 +37,9 @@ Object.keys(log4jConfig.appenders).forEach(function (key) {
 
 log4j.addLayout('json', function (config) {
   return function (logEvent) {
-    const time = logEvent.startTime;
 
     const log = {
-      timestamp: time.toISOString().substr(0, 10) + ' ' + time.toTimeString().substr(0, 8) + ':' + time.getMilliseconds(),
+      timestamp: parseDate(logEvent.startTime),
       level: logEvent.level.levelStr.toLowerCase(),
       project_name: 'oms4',
       category: logEvent.categoryName,
@@ -49,7 +49,6 @@ log4j.addLayout('json', function (config) {
     return JSON.stringify(log);
   }
 });
-
 
 log4j.configure(log4jConfig);
 
