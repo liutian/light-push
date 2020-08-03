@@ -79,8 +79,8 @@ prod:
 
   log_prefix:
   log_path: /service/logs/app/prod/oms4/push-socket
-  sentinels_name: 'sentinel-10.11.12.43-28031'
+  sentinels_name: 'sentinel-10.41.19.24-6379'
   sentinels:
-    - 'redis-prod-04.cloud.bz:28026'
-    - 'redis-prod-05.cloud.bz:28034'
-    - 'redis-prod-06.cloud.bz:28032'
+    - 'jy-oms4-redis-prod-db01.cloud.bz:6380'
+    - 'jy-oms4-redis-prod-db02.cloud.bz:6380'
+    - 'jy-oms4-redis-prod-db03.cloud.bz:6379'
