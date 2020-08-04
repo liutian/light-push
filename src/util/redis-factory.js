@@ -42,6 +42,7 @@ function create() {
       });
       options.sentinels = addressArr;
       options.name = config.sentinels_name;
+      logger.warn('redis sentinels mode name: ' + config.sentinels_name);
     } else {
       options = Object.assign(options, {
         host: config.redis_address.split(':')[0],
