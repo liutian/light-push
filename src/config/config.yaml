@@ -79,6 +79,7 @@ prod:
 
   log_prefix:
   log_path: /service/logs/app/prod/oms4/push-socket
+  redis_db: 5
   sentinels_name: 'sentinel-10.41.19.24-6379'
   sentinels:
     - 'jy-oms4-redis-prod-db01.cloud.bz:6380'
