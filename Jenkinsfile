@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        USER_EMAIL = "shunshun.liu@baozun.com"  //发送邮件的地址（一般为项目owner，按实际修改）
+        USER_EMAIL = "liuss@demo.com"  //发送邮件的地址（一般为项目owner，按实际修改）
         USER = "shunshun.liu"  //发送邮件的邮箱前缀（一般为项目owner，按实际修改）
         PROJECT_NAME = "oms4" //项目名，按实际修改
         APP_NAME = "push-socket push-logic"  //应用名，按实际修改，如有多个，在括号内添加，以空格间隔(例如"ofa-service-a ofa-service-b ofa-service-c")
-        HARBOR_ADDR = "ic-harbor.baozun.com"  //Harbor地址，无需修改
+        HARBOR_ADDR = "demo.com"  //Harbor地址，无需修改
         DOCKER_NAME = "Dockerfile"  //Dockerfile文件位置，如有多个，在括号内添加，以空格间隔，顺序按照APP_NAME一样(例如"ecs-ofa-service-impl-a/docker/Dockerfile-ecs ecs-ofa-service-impl-a/docker/Dockerfile-ecs ecs-ofa-service-impl-c/docker/Dockerfile-ecs")
     }
 
