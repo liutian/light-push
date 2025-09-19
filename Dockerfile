@@ -1,4 +1,4 @@
-From ic-harbor.baozun.com/ic/alpine-node10:v1.1
+From demo.com/node10:v1.1
 
 USER vmuser
 RUN mkdir /opt/project/src -p
